@@ -1,0 +1,21 @@
+{{ define "base" -}}
+<!DOCTYPE html>
+<html lang='cs'>
+<head>
+	<meta charset='utf-8'>
+	<title>Tinyquiz</title>
+	<link rel="stylesheet" href="/static/style.css">
+	{{ block "aditional-css" . }}{{ end }}
+	<script src="/static/script.js" defer type="text/javascript"></script>
+	{{ block "aditional-js" . }}{{ end }}
+</head>
+<body>
+<header>
+	{{- block "header" . }}{{ end -}}
+</header>
+<main>
+	{{- template "main" . -}}
+</main>
+</body>
+</html>
+{{- end }}

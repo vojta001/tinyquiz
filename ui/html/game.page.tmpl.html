@@ -1,0 +1,107 @@
+{{- template "base" . -}}
+
+{{- define "aditional-css" -}}
+	<link rel="stylesheet" href="/static/game.css">
+{{ end -}}
+
+{{- define "aditional-js" -}}
+{{ end -}}
+
+{{- define "header" }}
+	<h1>{{ .P.Edges.Session.Edges.Game.Name }}</h1>
+{{ end -}}
+
+{{- define "main" }}
+	<template id="name-template">
+		<span class="name"></span>
+	</template>
+	<section id="names" data-my-name="{{ .P.Name }}"></section>
+
+	<template id="answer-template">
+		<button class="answer"></button>
+	</template>
+	<template id="question-template">
+		<h1 class="question"></h1>
+		<div class="answers"></div>
+	</template>
+	<section id="question"></section>
+
+	<section id="controls">
+		<button class="next" data-session="{{ .P.Edges.Session.ID }}">Další otázka</button>
+	</section>
+
+	<script>
+		const socket = new WebSocket('ws://' + window.location.host + '/ws/' + encodeURIComponent({{ .P.ID }}));
+
+		//TODO remove
+		socket.addEventListener('open', () => {
+			console.log("WS oppened");
+		});
+
+		const namesSection = document.getElementById('names');
+		const nameTemplate = document.getElementById('name-template')
+
+		const questionSection = document.getElementById('question');
+		const questionTemplate = document.getElementById('question-template');
+		const answerTemplate = document.getElementById('answer-template');
+
+		document.addEventListener("DOMContentLoaded", () => {
+			const next = document.querySelector('#controls .next');
+			next.addEventListener("click", () => {
+				let url = window.location.path + '/rpc/next';
+				if (questionSection.dataset.id) {
+					url += '?current=' + encodeURIComponent(questionSection.dataset.id);
+				}
+				fetch(url, {method: "POST"})
+					.catch(() => {
+						console.warn("Setting next question failed")
+					});
+			});
+		});
+
+		socket.addEventListener('message', (e) => {
+			const data = JSON.parse(e.data);
+			console.log(data); //TODO remove debug
+
+			if ('players' in data) {
+				namesSection.innerHTML = '';
+				for (const player of data.players) {
+					const nameClone = nameTemplate.content.cloneNode(true);
+					const name = nameClone.querySelector('.name');
+					name.innerText = player.name;
+					if (player.name === namesSection.dataset.myName) {
+						if (player.organiser) {
+							document.body.classList.add('organiser');
+						} else {
+							document.body.classList.remove('organiser');
+						}
+						name.classList.add('my-name');
+					}
+					if (player.organiser) {
+						name.classList.add('organiser');
+					}
+					namesSection.appendChild(nameClone);
+				}
+			}
+
+			if ('question' in data) {
+				questionSection.innerHTML = '';
+				if (data.question) {
+					const questionClone = questionTemplate.content.cloneNode(true);
+					questionClone.querySelector('.question').innerText = data.question.title;
+					const answers = questionClone.querySelector('.answers');
+					const organiser = document.body.classList.contains('organiser');
+					for (const answer of data.question.answers) {
+						const answerClone = answerTemplate.content.cloneNode(true);
+						answerClone.querySelector('.answer').innerText = answer.title;
+						if (organiser) {
+							answerClone.querySelector('.answer').disabled = true;
+						}
+						answers.appendChild(answerClone);
+					}
+					questionSection.appendChild(questionClone);
+				}
+			}
+		});
+	</script>
+{{ end -}}

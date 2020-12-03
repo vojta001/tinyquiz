@@ -1,0 +1,45 @@
+{{- template "base" . -}}
+
+{{- define "aditional-css" -}}
+	<link rel="stylesheet" href="/static/home.css">
+{{ end -}}
+
+{{- define "aditional-js" -}}
+	<script src="/static/home.js"></script>
+{{ end -}}
+
+{{- define "main" }}
+	<main>
+		<section>
+			<h1>Statistiky</h1>
+			<p>
+				Celkem odehráno {{ .Stats.Sessions }} her {{ .Stats.Players }} hráči.
+				Celkem je k dispozici {{ .Stats.Games }} kvízů.
+			</p>
+		</section>
+		<section>
+			<h1>Připojit se ke hře</h1>
+			<form id="join" method="post">
+				<label>Kód hry: <input type="text" name="code" placeholder="Kód hry"></label>
+				<label>Jméno hráče: <input type="text" name="player" placeholder="Jméno"></label>
+				<input type="submit" value="Připojit do hry">
+			</form>
+		</section>
+		<section>
+			<h1>Začít hrát</h1>
+			<form id="play" method="post" action="/play">
+				<label>Kód kvízu: <input type="text" name="code" placeholder="Kód kvizu"></label>
+				<label>Jméno organizátora: <input type="text" name="organiser" placeholder="Jméno"></label>
+				<input type="submit" value="Začit hrát">
+			</form>
+		</section>
+		<section>
+			<h1>Vytvořit nový kvíz</h1>
+			<form id="new" method="get" action="/new">
+				<label>Jméno kvízu: <input type="text" name="quiz" placeholder="Jméno kvízu"></label>
+				<label>Jméno autora: <input type="text" name="author" placeholder="Jméno"></label>
+				<input type="submit" value="Vytvořit">
+			</form>
+		</section>
+	</main>
+{{ end -}}
