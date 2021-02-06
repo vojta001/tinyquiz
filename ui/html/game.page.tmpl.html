@@ -15,7 +15,7 @@
 	<template id="name-template">
 		<span class="name"></span>
 	</template>
-	<section id="names" data-my-name="{{ .P.Name }}"></section>
+	<section id="names" data-my-name="{{ .P.Name }}" data-my-id="{{ .P.ID }}"></section>
 
 	<template id="answer-template">
 		<button class="answer"></button>
@@ -31,19 +31,16 @@
 	</section>
 
 	<script>
-		const socket = new WebSocket('ws://' + window.location.host + '/ws/' + encodeURIComponent({{ .P.ID }}));
-
-		//TODO remove
-		socket.addEventListener('open', () => {
-			console.log("WS oppened");
-		});
-
 		const namesSection = document.getElementById('names');
 		const nameTemplate = document.getElementById('name-template')
 
 		const questionSection = document.getElementById('question');
 		const questionTemplate = document.getElementById('question-template');
 		const answerTemplate = document.getElementById('answer-template');
+
+		const playerId = namesSection.dataset.myId;
+
+		const socket = new WebSocket('ws://' + window.location.host + '/ws/' + encodeURIComponent(playerId));
 
 		document.addEventListener("DOMContentLoaded", () => {
 			const next = document.querySelector('#controls .next');
