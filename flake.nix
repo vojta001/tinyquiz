@@ -21,7 +21,7 @@
         '${pkgs.findutils}/bin/find' cmd pkg ui/html | '${pkgs.entr}/bin/entr' -dr '${pkgs.go_1_14}/bin/go' run ./cmd/web
       '';
       packages.x86_64-linux.devDb = pkgs.writeShellScriptBin "devDb" ''
-        '${pkgs.postgresql}/bin/postgres' -D .pg-data -k "$PWD/.pg-sockets" #-c listen_addresses="" # Goland does not support connecting over socket
+        '${pkgs.postgresql}/bin/postgres' -D .pg-data -k "$PWD/.pg-sockets" -c log_statement=all #-c listen_addresses="" # Goland does not support connecting over socket
       '';
     };
 }
