@@ -55,7 +55,7 @@ func (app *application) play(w http.ResponseWriter, r *http.Request, params http
 			app.serverError(w, err)
 			return
 		}
-		http.Redirect(w, r, "/game/" + url.PathEscape(player.ID.String()), http.StatusSeeOther)
+		http.Redirect(w, r, "/game/"+url.PathEscape(player.ID.String()), http.StatusSeeOther)
 		return
 	} else if errors.Is(err, model.NoSuchEntity) {
 		app.clientError(w, http.StatusNotFound)
@@ -91,6 +91,38 @@ func (app *application) game(w http.ResponseWriter, r *http.Request, params http
 		app.render(w, r, "game.page.tmpl.html", td)
 	} else {
 		app.clientError(w, http.StatusNotFound)
+		return
+	}
+}
+
+func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	var playerUid uuid.UUID
+	if uid, err := uuid.Parse(params.ByName("playerUid")); err == nil {
+		playerUid = uid
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if player, err := app.model.GetPlayerWithSessionAndGame(playerUid, r.Context()); err == nil {
+		var sessionId = player.Edges.Session.ID
+		if err := app.model.NextQuestion(sessionId, r.Context()); err == nil {
+			if su, err := app.model.GetQuestionStateUpdate(sessionId, r.Context()); err == nil {
+				app.rtClients.SendToAll(sessionId, su)
+			} else {
+				app.serverError(w, err)
+				return
+			}
+		} else {
+			app.serverError(w, err)
+			return
+		}
+	} else if ent.IsNotFound(err) {
+		app.infoLog.Println(playerUid)
+		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
 		return
 	}
 }

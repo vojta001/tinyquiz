@@ -45,10 +45,7 @@
 		document.addEventListener("DOMContentLoaded", () => {
 			const next = document.querySelector('#controls .next');
 			next.addEventListener("click", () => {
-				let url = window.location.path + '/rpc/next';
-				if (questionSection.dataset.id) {
-					url += '?current=' + encodeURIComponent(questionSection.dataset.id);
-				}
+				let url = window.location.pathname + '/rpc/next';
 				fetch(url, {method: "POST"})
 					.catch(() => {
 						console.warn("Setting next question failed")

@@ -16,14 +16,12 @@ func (Session) Fields() []ent.Field {
 		field.UUID("id", uuid.New()).Immutable(),
 		field.Time("created").Immutable(),
 		field.Time("started").Nillable().Optional(), // TODO remove?
-		field.Time("current_question_until").Nillable().Optional(),
 		field.String("code").MinLen(6).MaxLen(6).Immutable().Unique(),
 	}
 }
 
 func (Session) Indexes() []ent.Index {
-	return []ent.Index{
-	}
+	return []ent.Index{}
 }
 
 func (Session) Edges() []ent.Edge {
@@ -33,9 +31,7 @@ func (Session) Edges() []ent.Edge {
 			Unique().
 			Required(),
 		edge.To("players", Player.Type),
-		edge.From("current_question", Question.Type).
-			Ref("current_sessions").
-			Unique(),
+		edge.To("askedQuestions", AskedQuestion.Type),
 	}
 }
 

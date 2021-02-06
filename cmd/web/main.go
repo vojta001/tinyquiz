@@ -68,6 +68,7 @@ func main() {
 	mux.POST("/play/:code", app.play)
 	mux.POST("/organise/:code", app.play)
 	mux.GET("/game/:playerUid", app.game)
+	mux.POST("/game/:playerUid/rpc/next", app.nextQuestion)
 
 	mux.GET("/ws/:playerUid", app.processWebSocket)
 

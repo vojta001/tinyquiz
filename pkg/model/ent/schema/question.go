@@ -17,6 +17,7 @@ func (Question) Fields() []ent.Field {
 		field.UUID("id", uuid.New()).Immutable(),
 		field.Text("title").MaxLen(256).MinLen(1),
 		field.Int("order"),
+		field.Uint64("defaultLength"), // in milliseconds
 	}
 }
 
@@ -33,7 +34,7 @@ func (Question) Edges() []ent.Edge {
 			Unique().
 			Required(),
 		edge.To("choices", Choice.Type),
-		edge.To("current_sessions", Session.Type),
+		edge.To("asked", AskedQuestion.Type),
 	}
 }
 

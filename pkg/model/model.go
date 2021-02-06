@@ -1,5 +1,7 @@
 package model
 
+//TODO loose transaction levels wherever possible
+
 import (
 	"context"
 	"database/sql"
@@ -7,6 +9,8 @@ import (
 	"github.com/google/uuid"
 	"time"
 	"vkane.cz/tinyquiz/pkg/model/ent"
+	"vkane.cz/tinyquiz/pkg/model/ent/askedquestion"
+	"vkane.cz/tinyquiz/pkg/model/ent/game"
 	"vkane.cz/tinyquiz/pkg/model/ent/player"
 	"vkane.cz/tinyquiz/pkg/model/ent/question"
 	"vkane.cz/tinyquiz/pkg/model/ent/session"
@@ -134,7 +138,8 @@ func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, c context.Context) (
 	}
 	defer tx.Commit()
 
-	if q, err := tx.Question.Query().Where(question.HasCurrentSessionsWith(session.ID(sessionId))).WithChoices().Only(c); err == nil {
+	if aq, err := tx.Question.Query().WithChoices().Where(question.HasAskedWith(askedquestion.HasSessionWith(session.ID(sessionId)))).QueryAsked().WithQuestion(func(q *ent.QuestionQuery) { q.WithChoices() }).Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {
+		var q = aq.Edges.Question
 		var qu rtcomm.QuestionUpdate
 		qu.Title = q.Title
 		qu.Answers = make([]rtcomm.Answer, 0, len(q.Edges.Choices))
@@ -165,4 +170,48 @@ func (m *Model) GetFullStateUpdate(sessionId uuid.UUID, c context.Context) (rtco
 		return rtcomm.StateUpdate{}, err
 	}
 	return su, nil
+}
+
+var NoNextQuestion = errors.New("there is no next question") // TODO fill
+
+// TODO retry on serialization failure
+// TODO validate sessionId
+func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
+	tx, err := m.c.BeginTx(c, &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	if err != nil {
+		return err
+	}
+	// TODO rollback only if not yet committed
+	defer tx.Rollback()
+
+	var now = time.Now()
+
+	var query = tx.Question.Query().Where(question.HasGameWith(game.HasSessionsWith(session.ID(sessionId)))).Order(ent.Asc(question.FieldOrder))
+
+	if current, err := tx.AskedQuestion.Query().Where(askedquestion.HasSessionWith(session.ID(sessionId))).WithQuestion().Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {
+		query.Where(question.OrderGT(current.Edges.Question.Order))
+		// TODO make sure we do not extend the deadline by slow processing
+		if current.Ended.After(now) {
+			if _, err := current.Update().SetEnded(now).Save(c); err != nil {
+				return err
+			}
+		}
+	} else if !ent.IsNotFound(err) {
+		return err
+	}
+
+	if next, err := query.First(c); err == nil {
+		if _, err := tx.AskedQuestion.Create().SetAsked(now).SetSessionID(sessionId).SetQuestion(next).SetEnded(now.Add(time.Duration(int64(next.DefaultLength)) * time.Millisecond)).Save(c); err != nil {
+			return err
+		}
+	} else if ent.IsNotFound(err) {
+		return NoNextQuestion
+	} else {
+		return err
+	}
+
+	tx.Commit()
+	return nil
 }
