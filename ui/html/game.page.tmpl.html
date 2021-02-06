@@ -57,7 +57,7 @@
 			const data = JSON.parse(e.data);
 			console.log(data); //TODO remove debug
 
-			if ('players' in data) {
+			if ('players' in data && data.players !== null) {
 				namesSection.innerHTML = '';
 				for (const player of data.players) {
 					const nameClone = nameTemplate.content.cloneNode(true);
