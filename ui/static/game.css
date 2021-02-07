@@ -33,6 +33,11 @@
     align-items: center;
 }
 
+#question * {
+    animation-name: appear;
+    animation-duration: .5s;
+}
+
 #question > h1 {
     font-size: 3rem;
 }
