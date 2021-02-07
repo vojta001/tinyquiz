@@ -46,6 +46,11 @@
     font-size: 2rem;
 }
 
+.answer.selected {
+    font-weight: bold;
+    text-shadow: 2px 1px 5px #0003;
+}
+
 /*body.organiser #question > .answers {
     display: none;
 }*/

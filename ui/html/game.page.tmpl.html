@@ -45,7 +45,7 @@
 		document.addEventListener("DOMContentLoaded", () => {
 			const next = document.querySelector('#controls .next');
 			next.addEventListener("click", () => {
-				let url = window.location.pathname + '/rpc/next';
+				const url = window.location.pathname + '/rpc/next';
 				fetch(url, {method: "POST"})
 					.catch(() => {
 						console.warn("Setting next question failed")
@@ -87,9 +87,24 @@
 					const organiser = document.body.classList.contains('organiser');
 					for (const answer of data.question.answers) {
 						const answerClone = answerTemplate.content.cloneNode(true);
-						answerClone.querySelector('.answer').innerText = answer.title;
+						const button = answerClone.querySelector('.answer');
+						button.innerText = answer.title;
+						button.dataset.id = answer.id;
 						if (organiser) {
-							answerClone.querySelector('.answer').disabled = true;
+							button.disabled = true;
+						} else {
+							button.addEventListener('click', (e) => {
+								const id = e.target.dataset.id;
+								const url = window.location.pathname + '/answers/' + encodeURIComponent(id);
+								fetch(url, {method: 'POST'})
+								.then(() => {
+									e.target.classList.add('selected');
+									for (const button of document.getElementsByClassName('answer')) {
+										button.disabled = true;
+									}
+								})
+								.catch((err) => console.error(err)) // TODO proper error handling
+							});
 						}
 						answers.appendChild(answerClone);
 					}

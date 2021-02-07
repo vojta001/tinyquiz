@@ -9,7 +9,9 @@ import (
 	"github.com/google/uuid"
 	"time"
 	"vkane.cz/tinyquiz/pkg/model/ent"
+	"vkane.cz/tinyquiz/pkg/model/ent/answer"
 	"vkane.cz/tinyquiz/pkg/model/ent/askedquestion"
+	"vkane.cz/tinyquiz/pkg/model/ent/choice"
 	"vkane.cz/tinyquiz/pkg/model/ent/game"
 	"vkane.cz/tinyquiz/pkg/model/ent/player"
 	"vkane.cz/tinyquiz/pkg/model/ent/question"
@@ -214,4 +216,52 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
 
 	tx.Commit()
 	return nil
+}
+
+var QuestionClosed = errors.New("the deadline for answers to this question has passed")
+var AlreadyAnswered = errors.New("the player has already answered the question")
+
+func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, c context.Context) (*ent.Answer, error) {
+	tx, err := m.c.BeginTx(c, &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	// check whether the player could pick this choice
+	if exists, err := tx.Choice.Query().Where(choice.HasQuestionWith(question.HasGameWith(game.HasSessionsWith(session.HasPlayersWith(player.ID(playerId))))), choice.ID(choiceId)).Exist(c); err == nil && !exists {
+		return nil, NoSuchEntity
+	} else if err != nil {
+		return nil, err
+	}
+
+	var q *ent.Question
+	// find the most recent question
+	if q, err = tx.Player.Query().Where(player.ID(playerId)).QuerySession().QueryGame().QueryQuestions().Where(question.HasAsked()).WithAsked().Order(ent.Desc(question.FieldOrder)).First(c); ent.IsNotFound(err) {
+		return nil, NoSuchEntity
+	} else if err != nil {
+		return nil, err
+	}
+
+	// check if the question is open
+	// Asked[0] is guaranteed to exist thanks to the previous query
+	if !q.Edges.Asked[0].Ended.After(time.Now()) {
+		return nil, QuestionClosed
+	}
+
+	// check the player has not answered yet
+	if exists, err := tx.Answer.Query().Where(answer.HasAnswererWith(player.ID(playerId)), answer.HasChoiceWith(choice.HasQuestionWith(question.ID(q.ID)))).Exist(c); err != nil {
+		return nil, err
+	} else if exists {
+		return nil, AlreadyAnswered
+	}
+
+	if a, err := tx.Answer.Create().SetID(uuid.New()).SetAnswered(time.Now()).SetChoiceID(choiceId).SetAnswererID(playerId).Save(c); err == nil {
+		tx.Commit()
+		return a, nil
+	} else {
+		return nil, err
+	}
 }

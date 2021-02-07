@@ -126,3 +126,33 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 		return
 	}
 }
+
+func (app *application) answer(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	var playerUid uuid.UUID
+	if uid, err := uuid.Parse(params.ByName("playerUid")); err == nil {
+		playerUid = uid
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	var choiceUid uuid.UUID
+	if uid, err := uuid.Parse(params.ByName("choiceUid")); err == nil {
+		choiceUid = uid
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if _, err := app.model.SaveAnswer(playerUid, choiceUid, r.Context()); err == nil {
+		// TODO notify organisers
+		w.WriteHeader(http.StatusCreated) // TODO or StatusNoContent?
+		return
+	} else if errors.Is(err, model.NoSuchEntity) {
+		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
+		return
+	}
+}
