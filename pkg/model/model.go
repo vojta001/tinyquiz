@@ -59,7 +59,7 @@ func (m *Model) GetStats(c context.Context) (Stats, error) {
 }
 
 // returns the player's UUID if error is nil
-// err = NoSuchEntity if the sessionsCode is incorrect
+// err = NoSuchEntity if the sessionCode is incorrect
 func (m *Model) RegisterPlayer(playerName string, sessionCode string, c context.Context) (*ent.Player, error) {
 	tx, err := m.c.BeginTx(c, &sql.TxOptions{
 		Isolation: sql.LevelRepeatableRead,
