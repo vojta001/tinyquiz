@@ -15,7 +15,7 @@ type Player struct {
 
 func (Player) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Immutable(),
+		field.UUID("id", uuid.Nil).Immutable(),
 		field.Text("name").MaxLen(64).MinLen(1).Match(regexp.MustCompile("(?:[a-z]|[A-Z]|_|-|.|,|[0-9])+")),
 		field.Time("joined").Immutable(),
 		field.Bool("organiser").Default(false),

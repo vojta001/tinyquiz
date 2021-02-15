@@ -14,7 +14,7 @@ type Question struct {
 
 func (Question) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Immutable(),
+		field.UUID("id", uuid.Nil).Immutable(),
 		field.Text("title").MaxLen(256).MinLen(1),
 		field.Int("order"),
 		field.Uint64("defaultLength"), // in milliseconds

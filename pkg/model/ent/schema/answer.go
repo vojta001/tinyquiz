@@ -13,14 +13,13 @@ type Answer struct {
 
 func (Answer) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Immutable().Unique(),
+		field.UUID("id", uuid.Nil).Immutable().Unique(),
 		field.Time("answered").Immutable(),
 	}
 }
 
 func (Answer) Indexes() []ent.Index {
-	return []ent.Index{
-	}
+	return []ent.Index{}
 }
 
 func (Answer) Edges() []ent.Edge {

@@ -13,15 +13,14 @@ type Choice struct {
 
 func (Choice) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Immutable(),
+		field.UUID("id", uuid.Nil).Immutable(),
 		field.Text("title").MinLen(1).MaxLen(256),
 		field.Bool("correct"),
 	}
 }
 
 func (Choice) Indexes() []ent.Index {
-	return []ent.Index{
-	}
+	return []ent.Index{}
 }
 
 func (Choice) Edges() []ent.Edge {

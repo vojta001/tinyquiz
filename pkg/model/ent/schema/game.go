@@ -13,7 +13,7 @@ type Game struct {
 
 func (Game) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Unique().Immutable(),
+		field.UUID("id", uuid.Nil).Unique().Immutable(),
 		field.Text("name").MaxLen(64),
 		field.Time("created").Immutable(),
 		field.Text("author").MaxLen(64),

@@ -13,7 +13,7 @@ type AskedQuestion struct {
 
 func (AskedQuestion) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).Immutable(),
+		field.UUID("id", uuid.Nil).Immutable(),
 		field.Time("asked").Immutable(),
 		field.Time("ended"),
 	}
