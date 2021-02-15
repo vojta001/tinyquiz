@@ -4,6 +4,7 @@ import (
 	"github.com/facebook/ent"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 type AskedQuestion struct {
@@ -12,6 +13,7 @@ type AskedQuestion struct {
 
 func (AskedQuestion) Fields() []ent.Field {
 	return []ent.Field{
+		field.UUID("id", uuid.New()).Immutable(),
 		field.Time("asked").Immutable(),
 		field.Time("ended"),
 	}

@@ -205,7 +205,7 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
 	}
 
 	if next, err := query.First(c); err == nil {
-		if _, err := tx.AskedQuestion.Create().SetAsked(now).SetSessionID(sessionId).SetQuestion(next).SetEnded(now.Add(time.Duration(int64(next.DefaultLength)) * time.Millisecond)).Save(c); err != nil {
+		if _, err := tx.AskedQuestion.Create().SetID(uuid.New()).SetAsked(now).SetSessionID(sessionId).SetQuestion(next).SetEnded(now.Add(time.Duration(int64(next.DefaultLength)) * time.Millisecond)).Save(c); err != nil {
 			return err
 		}
 	} else if ent.IsNotFound(err) {
