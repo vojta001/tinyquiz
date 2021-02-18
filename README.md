@@ -58,7 +58,7 @@ Brief end-to-end testing may be added later.
 
 ## Building and running
 
-*Go 1.16 is expected to be released in February 2021. It will bring static files embedding into the binary. Until it happens, the binary has to be run from the rot of the project to be able to find the `ui` directory.*
+*Go 1.16 is expected to be released in February 2021. It will bring static files embedding into the binary. Until it happens, the binary has to be run from the root of the project to be able to find the `ui` directory.*
 
 The reference way to build the app is in the `flake.nix`. For non-Nix users, building shall be pretty trivial though. Just obtain a new enough version of Go (see `go.mod`) and build the runnable package of your choice (usually `go build ./cmd/web`).
 
