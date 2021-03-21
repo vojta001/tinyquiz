@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
 )
@@ -43,7 +44,7 @@ func (app *application) play(w http.ResponseWriter, r *http.Request, params http
 		return
 	}
 
-	if player, err := app.model.RegisterPlayer(player, code, r.Context()); err == nil {
+	if player, err := app.model.RegisterPlayer(player, code, time.Now(), r.Context()); err == nil {
 		if session, err := player.Unwrap().QuerySession().Only(r.Context()); err == nil {
 			if su, err := app.model.GetPlayersStateUpdate(session.ID, r.Context()); err == nil {
 				app.rtClients.SendToAll(session.ID, su)
@@ -106,7 +107,7 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 
 	if player, err := app.model.GetPlayerWithSessionAndGame(playerUid, r.Context()); err == nil {
 		var sessionId = player.Edges.Session.ID
-		if err := app.model.NextQuestion(sessionId, r.Context()); err == nil {
+		if err := app.model.NextQuestion(sessionId, time.Now(), r.Context()); err == nil {
 			if su, err := app.model.GetQuestionStateUpdate(sessionId, r.Context()); err == nil {
 				app.rtClients.SendToAll(sessionId, su)
 			} else {
@@ -144,7 +145,7 @@ func (app *application) answer(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 
-	if _, err := app.model.SaveAnswer(playerUid, choiceUid, r.Context()); err == nil {
+	if _, err := app.model.SaveAnswer(playerUid, choiceUid, time.Now(), r.Context()); err == nil {
 		// TODO notify organisers
 		w.WriteHeader(http.StatusCreated) // TODO or StatusNoContent?
 		return

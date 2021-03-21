@@ -112,7 +112,7 @@ func TestModel_NextQuestion(t *testing.T) {
 	m := newTestModelWithData(t)
 	c := context.Background()
 
-	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), c); err != nil {
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388006, 0), c); err != nil {
 		t.Fatalf("Unexpected error when switching to next question: %v", err)
 	}
 }
@@ -122,11 +122,11 @@ func TestModel_NextQuestion_noNextQuestion(t *testing.T) {
 	m := newTestModelWithData(t)
 	c := context.Background()
 
-	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), c); err != nil {
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388006, 0), c); err != nil {
 		t.Fatalf("Unexpected error when switching to next question: %v", err)
 	}
 
-	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), c); err == nil {
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388008, 0), c); err == nil {
 		t.Fatalf("Switching to next question from the last one did not fail")
 	} else if !errors.Is(err, NoNextQuestion) {
 		t.Fatalf("Unexpected error type after switching to next question from the last one: %v", err)

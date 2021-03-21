@@ -60,7 +60,7 @@ func (m *Model) GetStats(c context.Context) (Stats, error) {
 
 // returns the player's UUID if error is nil
 // err = NoSuchEntity if the sessionCode is incorrect
-func (m *Model) RegisterPlayer(playerName string, sessionCode string, c context.Context) (*ent.Player, error) {
+func (m *Model) RegisterPlayer(playerName string, sessionCode string, now time.Time, c context.Context) (*ent.Player, error) {
 	tx, err := m.c.BeginTx(c, &sql.TxOptions{
 		Isolation: sql.LevelRepeatableRead,
 	})
@@ -74,7 +74,7 @@ func (m *Model) RegisterPlayer(playerName string, sessionCode string, c context.
 	} else if err != nil {
 		return nil, err
 	} else {
-		if p, err := tx.Player.Create().SetID(uuid.New()).SetJoined(time.Now()).SetName(playerName).SetSession(s).Save(c); err == nil {
+		if p, err := tx.Player.Create().SetID(uuid.New()).SetJoined(now).SetName(playerName).SetSession(s).Save(c); err == nil {
 			return p, nil
 		} else if ent.IsConstraintError(err) {
 			return nil, ConstraintViolation
@@ -178,7 +178,7 @@ var NoNextQuestion = errors.New("there is no next question") // TODO fill
 
 // TODO retry on serialization failure
 // TODO validate sessionId
-func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
+func (m *Model) NextQuestion(sessionId uuid.UUID, now time.Time, c context.Context) error {
 	tx, err := m.c.BeginTx(c, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 	})
@@ -188,13 +188,10 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
 	// TODO rollback only if not yet committed
 	defer tx.Rollback()
 
-	var now = time.Now()
-
 	var query = tx.Question.Query().Where(question.HasGameWith(game.HasSessionsWith(session.ID(sessionId)))).Order(ent.Asc(question.FieldOrder))
 
 	if current, err := tx.AskedQuestion.Query().Where(askedquestion.HasSessionWith(session.ID(sessionId))).WithQuestion().Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {
 		query.Where(question.OrderGT(current.Edges.Question.Order))
-		// TODO make sure we do not extend the deadline by slow processing
 		if current.Ended.After(now) {
 			if _, err := current.Update().SetEnded(now).Save(c); err != nil {
 				return err
@@ -221,7 +218,7 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, c context.Context) error {
 var QuestionClosed = errors.New("the deadline for answers to this question has passed")
 var AlreadyAnswered = errors.New("the player has already answered the question")
 
-func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, c context.Context) (*ent.Answer, error) {
+func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, now time.Time, c context.Context) (*ent.Answer, error) {
 	tx, err := m.c.BeginTx(c, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 	})
@@ -247,7 +244,7 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, c context.Con
 
 	// check if the question is open
 	// Asked[0] is guaranteed to exist thanks to the previous query
-	if !q.Edges.Asked[0].Ended.After(time.Now()) {
+	if !q.Edges.Asked[0].Ended.After(now) {
 		return nil, QuestionClosed
 	}
 
@@ -258,7 +255,7 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, c context.Con
 		return nil, AlreadyAnswered
 	}
 
-	if a, err := tx.Answer.Create().SetID(uuid.New()).SetAnswered(time.Now()).SetChoiceID(choiceId).SetAnswererID(playerId).Save(c); err == nil {
+	if a, err := tx.Answer.Create().SetID(uuid.New()).SetAnswered(now).SetChoiceID(choiceId).SetAnswererID(playerId).Save(c); err == nil {
 		tx.Commit()
 		return a, nil
 	} else {
