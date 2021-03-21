@@ -132,3 +132,37 @@ func TestModel_NextQuestion_noNextQuestion(t *testing.T) {
 		t.Fatalf("Unexpected error type after switching to next question from the last one: %v", err)
 	}
 }
+
+func TestModel_SaveAnswer(t *testing.T) {
+	m := newTestModelWithData(t)
+	c := context.Background()
+	answerId := uuid.MustParse("5155b997-eb2c-4cd0-a067-2bb01379730f")
+
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), answerId, time.Unix(1613388000, 0), c); err != nil {
+		t.Fatalf("Saving answer failed: %v", err)
+	}
+}
+
+func TestModel_SaveAnswer_again(t *testing.T) {
+	m := newTestModelWithData(t)
+	c := context.Background()
+	answerId := uuid.MustParse("5155b997-eb2c-4cd0-a067-2bb01379730f")
+
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), answerId, time.Unix(1613388000, 0), c); err != nil {
+		t.Fatalf("Saving answer failed: %v", err)
+	}
+
+	// same answer
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), answerId, time.Unix(1613388000, 500), c); err == nil {
+		t.Fatalf("Saving answer again succeeded")
+	} else if !errors.Is(err, AlreadyAnswered) {
+		t.Fatalf("Saving answer again failed with unexpected error type: %v", err)
+	}
+
+	// different answer
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), uuid.MustParse("b88b7f4e-1b17-49ea-8e90-cf42ae4e0f09"), time.Unix(1613388000, 500), c); err == nil {
+		t.Fatalf("Saving answer again succeeded")
+	} else if !errors.Is(err, AlreadyAnswered) {
+		t.Fatalf("Saving answer again failed with unexpected error type: %v", err)
+	}
+}
