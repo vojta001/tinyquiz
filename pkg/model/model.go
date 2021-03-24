@@ -236,7 +236,9 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, now time.Time
 
 	var q *ent.Question
 	// find the most recent question
-	if q, err = tx.Player.Query().Where(player.ID(playerId)).QuerySession().QueryGame().QueryQuestions().Where(question.HasAsked()).WithAsked().Order(ent.Desc(question.FieldOrder)).First(c); ent.IsNotFound(err) {
+	if q, err = tx.Player.Query().Where(player.ID(playerId)).QuerySession().QueryAskedQuestions().QueryQuestion().WithAsked(func(q *ent.AskedQuestionQuery) {
+		q.Where(askedquestion.HasSessionWith(session.HasPlayersWith(player.ID(playerId))))
+	}).Order(ent.Desc(question.FieldOrder)).First(c); ent.IsNotFound(err) {
 		return nil, NoSuchEntity
 	} else if err != nil {
 		return nil, err
