@@ -188,6 +188,10 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, now time.Time, c context.Conte
 	// TODO rollback only if not yet committed
 	defer tx.Rollback()
 
+	if err := tx.Session.Update().Where(session.ID(sessionId)).Where(session.StartedIsNil()).SetStarted(now).Exec(c); err != nil {
+		return err
+	}
+
 	var query = tx.Question.Query().Where(question.HasGameWith(game.HasSessionsWith(session.ID(sessionId)))).Order(ent.Asc(question.FieldOrder))
 
 	if current, err := tx.AskedQuestion.Query().Where(askedquestion.HasSessionWith(session.ID(sessionId))).WithQuestion().Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {

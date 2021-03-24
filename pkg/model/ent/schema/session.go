@@ -15,7 +15,7 @@ func (Session) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.Nil).Immutable(),
 		field.Time("created").Immutable(),
-		field.Time("started").Nillable().Optional(), // TODO remove?
+		field.Time("started").Nillable().Optional(),
 		field.String("code").MinLen(6).MaxLen(6).Immutable().Unique(),
 	}
 }
