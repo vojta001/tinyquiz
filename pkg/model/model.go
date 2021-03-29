@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"time"
+	"vkane.cz/tinyquiz/pkg/codeGenerator"
 	"vkane.cz/tinyquiz/pkg/model/ent"
 	"vkane.cz/tinyquiz/pkg/model/ent/answer"
 	"vkane.cz/tinyquiz/pkg/model/ent/askedquestion"
@@ -81,6 +82,41 @@ func (m *Model) RegisterPlayer(playerName string, sessionCode string, now time.T
 		} else {
 			return nil, err
 		}
+	}
+}
+
+func (m *Model) CreateSession(organiserName string, gameCode string, now time.Time, c context.Context) (*ent.Session, *ent.Player, error) {
+	tx, err := m.c.BeginTx(c, &sql.TxOptions{
+		Isolation: sql.LevelReadCommitted,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	defer tx.Rollback()
+
+	if gameId, err := tx.Game.Query().Where(game.Code(gameCode)).OnlyID(c); err == nil {
+		if incremental, err := m.getCodeIncremental(c); err == nil {
+			if code, err := codeGenerator.GenerateRandomCode(incremental, codeRandomPartLength); err == nil {
+				if s, err := tx.Session.Create().SetID(uuid.New()).SetCreated(now).SetCode(string(code)).SetGameID(gameId).Save(c); err == nil {
+					if p, err := tx.Player.Create().SetID(uuid.New()).SetJoined(now).SetName(organiserName).SetSession(s).SetOrganiser(true).Save(c); err == nil {
+						err := tx.Commit()
+						return s, p, err
+					} else {
+						return nil, nil, err
+					}
+				} else {
+					return nil, nil, err
+				}
+			} else {
+				return nil, nil, err
+			}
+		} else {
+			return nil, nil, err
+		}
+	} else if ent.IsNotFound(err) {
+		return nil, nil, NoSuchEntity
+	} else {
+		return nil, nil, err
 	}
 }
 
@@ -266,5 +302,15 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, now time.Time
 		return a, nil
 	} else {
 		return nil, err
+	}
+}
+
+const codeRandomPartLength uint8 = 3
+
+func (m *Model) getCodeIncremental(c context.Context) (uint64, error) {
+	if c, err := m.c.CodesSequence.Create().Save(c); err == nil {
+		return uint64(c.ID), nil
+	} else {
+		return 0, nil
 	}
 }

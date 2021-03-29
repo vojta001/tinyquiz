@@ -43,7 +43,7 @@ func newTestModelWithData(t *testing.T) *Model {
 	defer tx.Rollback()
 
 	var gamesC = []*ent.GameCreate{
-		tx.Game.Create().SetID(uuid.MustParse("cab48de7-bba3-4873-9335-eec4aaaae1e9")).SetName("5th grade knowledge test").SetCreated(time.Unix(1613387448, 0)).SetAuthor("Adam Smith PhD."),
+		tx.Game.Create().SetID(uuid.MustParse("cab48de7-bba3-4873-9335-eec4aaaae1e9")).SetName("5th grade knowledge test").SetCode("abcdef").SetCreated(time.Unix(1613387448, 0)).SetAuthor("Adam Smith PhD."),
 	}
 
 	games := tx.Game.CreateBulk(gamesC...).SaveX(c)

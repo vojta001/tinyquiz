@@ -17,6 +17,7 @@ func (Game) Fields() []ent.Field {
 		field.Text("name").MaxLen(64),
 		field.Time("created").Immutable(),
 		field.Text("author").MaxLen(64),
+		field.Text("code").MinLen(1).Unique(),
 	}
 }
 

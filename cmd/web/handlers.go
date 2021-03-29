@@ -71,6 +71,38 @@ func (app *application) play(w http.ResponseWriter, r *http.Request, params http
 
 }
 
+func (app *application) createSession(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	if err := r.ParseForm(); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	var code = strings.TrimSpace(r.PostForm.Get("code"))
+	var player = strings.ToLower(strings.TrimSpace(r.PostForm.Get("organiser")))
+
+	if len(player) < 1 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if s, p, err := app.model.CreateSession(player, code, time.Now(), r.Context()); err == nil {
+		if su, err := app.model.GetPlayersStateUpdate(s.ID, r.Context()); err == nil {
+			app.rtClients.SendToAll(s.ID, su)
+			http.Redirect(w, r, "/game/"+url.PathEscape(p.ID.String()), http.StatusSeeOther)
+			return
+		} else {
+			app.serverError(w, err)
+			return
+		}
+	} else if errors.Is(err, model.NoSuchEntity) {
+		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
+		return
+	}
+}
+
 func (app *application) game(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	var playerUid uuid.UUID
 	if uid, err := uuid.Parse(params.ByName("playerUid")); err == nil {
