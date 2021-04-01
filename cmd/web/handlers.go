@@ -142,6 +142,8 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 		if err := app.model.NextQuestion(sessionId, time.Now(), r.Context()); err == nil {
 			if su, err := app.model.GetQuestionStateUpdate(sessionId, r.Context()); err == nil {
 				app.rtClients.SendToAll(sessionId, su)
+				w.WriteHeader(http.StatusNoContent)
+				return
 			} else {
 				app.serverError(w, err)
 				return
@@ -151,7 +153,6 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 			return
 		}
 	} else if ent.IsNotFound(err) {
-		app.infoLog.Println(playerUid)
 		app.clientError(w, http.StatusNotFound)
 		return
 	} else {
