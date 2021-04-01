@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/google/uuid"
+	"sort"
 	"time"
 	"vkane.cz/tinyquiz/pkg/codeGenerator"
 	"vkane.cz/tinyquiz/pkg/model/ent"
@@ -302,6 +303,75 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, now time.Time
 		return a, nil
 	} else {
 		return nil, err
+	}
+}
+
+type PlayerResult struct {
+	Player  *ent.Player
+	place   uint64
+	correct int64
+}
+
+func (r PlayerResult) Points() int64 {
+	return r.correct
+}
+
+func (r PlayerResult) Place() uint64 {
+	return r.place
+}
+
+func (m *Model) GetResults(playerId uuid.UUID, c context.Context) ([]PlayerResult, *ent.Session, *ent.Player, error) {
+	tx, err := m.c.BeginTx(c, &sql.TxOptions{
+		Isolation: sql.LevelRepeatableRead,
+		ReadOnly:  true,
+	})
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer tx.Commit()
+
+	s, err := tx.Session.Query().WithGame().Where(session.HasPlayersWith(player.ID(playerId))).Only(c)
+	if ent.IsNotFound(err) {
+		return nil, nil, nil, NoSuchEntity
+	} else if err != nil {
+		return nil, nil, nil, err
+	}
+
+	p, err := tx.Player.Query().Where(player.ID(playerId)).Only(c)
+	if ent.IsNotFound(err) {
+		return nil, nil, nil, NoSuchEntity
+	} else if err != nil {
+		return nil, nil, nil, err
+	}
+
+	if players, err := tx.Player.Query().Where(player.HasSessionWith(session.ID(s.ID))).Where(player.Organiser(false)).Order(ent.Asc(player.FieldName)).WithAnswers(func(q *ent.AnswerQuery) { q.WithChoice() }).All(c); err == nil {
+		var results = make([]PlayerResult, 0, len(players))
+		for _, p := range players {
+			var res PlayerResult
+			res.Player = p
+			for _, a := range p.Edges.Answers {
+				if a.Edges.Choice.Correct {
+					res.correct++
+				}
+			}
+			results = append(results, res)
+		}
+		sort.SliceStable(results, func(i, j int) bool { return results[i].correct > results[j].correct }) // sort in reverse
+		if len(results) > 0 {
+			results[0].place = 1
+		}
+		var place uint64 = 2
+		for i := 1; i < len(results); i++ {
+			if results[i].Points() == results[i-1].Points() {
+				results[i].place = results[i-1].place
+			} else {
+				results[i].place = place
+			}
+			place++
+		}
+		return results, s, p, nil
+	} else {
+		return nil, nil, nil, err
 	}
 }
 

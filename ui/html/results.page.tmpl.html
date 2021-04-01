@@ -1,0 +1,22 @@
+{{- template "base" . -}}
+
+{{- define "additional-css" -}}
+{{ end -}}
+
+{{- define "additional-js" -}}
+{{ end -}}
+
+{{- define "header" }}
+	<h1>{{ .Session.Edges.Game.Name }} hrána {{ .Session.Started.Format "2006.01.02 15:04:05 MST" }}</h1>
+	<h2>{{ if .Player.Organiser }}Organizátor{{ else }}Hráč{{ end }} {{ .Player.Name }}</h2>
+{{ end -}}
+
+{{- define "main" }}
+<table>
+	<tbody>
+	{{ range .Results }}
+		<tr><td>{{ .Place }}. místo</td><td>{{ .Player.Name }}</td><td>{{ .Points }}b</td></tr>
+	{{ end }}
+	</tbody>
+</table>
+{{ end -}}

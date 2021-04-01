@@ -10,6 +10,7 @@ import (
 	"time"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
+	"vkane.cz/tinyquiz/pkg/rtcomm"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -148,6 +149,10 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 				app.serverError(w, err)
 				return
 			}
+		} else if errors.Is(err, model.NoNextQuestion) {
+			app.rtClients.SendToAll(sessionId, rtcomm.StateUpdate{Results: true})
+			w.WriteHeader(http.StatusNoContent)
+			return
 		} else {
 			app.serverError(w, err)
 			return
@@ -189,4 +194,37 @@ func (app *application) answer(w http.ResponseWriter, r *http.Request, params ht
 		app.serverError(w, err)
 		return
 	}
+}
+
+func (app *application) resultsGeneral(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	type resultsData struct {
+		Results []model.PlayerResult
+		Session *ent.Session
+		Player  *ent.Player
+		templateData
+	}
+	td := &resultsData{}
+	setDefaultTemplateData(&td.templateData)
+
+	var playerUid uuid.UUID
+	if uid, err := uuid.Parse(params.ByName("playerUid")); err == nil {
+		playerUid = uid
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if results, session, player, err := app.model.GetResults(playerUid, r.Context()); err == nil {
+		td.Results = results
+		td.Session = session
+		td.Player = player
+	} else if errors.Is(err, model.NoSuchEntity) {
+		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "results.page.tmpl.html", td)
 }

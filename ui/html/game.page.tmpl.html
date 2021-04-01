@@ -111,6 +111,10 @@
 					questionSection.appendChild(questionClone);
 				}
 			}
+
+			if ('results' in data && data.results === true) {
+				window.location.pathname = "/results/" + encodeURIComponent(playerId);
+			}
 		});
 	</script>
 {{ end -}}
