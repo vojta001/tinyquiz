@@ -65,6 +65,14 @@ body.organiser #controls {
     justify-content: flex-end;
 }
 
+#session-code {
+    display: none;
+}
+
+body.organiser #session-code {
+    display: inline;
+}
+
 @keyframes appear {
     from {
         transform: scale(2, 2);

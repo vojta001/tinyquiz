@@ -8,7 +8,7 @@
 {{ end -}}
 
 {{- define "header" }}
-	<h1>{{ .P.Edges.Session.Edges.Game.Name }}</h1>
+	<h1>{{ .P.Edges.Session.Edges.Game.Name }}<span id="session-code"> ({{ .P.Edges.Session.Code }})</span></h1>
 {{ end -}}
 
 {{- define "main" }}
