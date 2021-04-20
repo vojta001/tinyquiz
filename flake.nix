@@ -1,15 +1,25 @@
 {
   description = "Tinyquiz – an open source online quiz platform";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-20.09";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs = { self, nixpkgs }:
   let
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    buildCmd = name:
+      (pkgs.buildGoPackage {
+        pname = "tinyquiz-${name}";
+        version = "dev";
+        src = ./.;
+        goDeps = ./deps.nix;
+        preBuild = "go generate vkane.cz/tinyquiz/...";
+        goPackagePath = "vkane.cz/tinyquiz";
+        subPackages = [ "cmd/${name}" ];
+      });
   in
     {
-      defaultPackage.x86_64-linux = self.packages.x86_64-linux.tinyquiz;
-      packages.x86_64-linux.tinyquiz = pkgs.hello; # TODO
+      defaultPackage.x86_64-linux = self.packages.x86_64-linux.tinyquiz-web;
+      packages.x86_64-linux.tinyquiz-web = buildCmd "web";
       packages.x86_64-linux.dev = pkgs.writeShellScriptBin "dev" ''
         echo "This dev script must be run from the project root, otherwise unexpected behavior might occur."
         read -p "Are you in the right directory and shall I continue? (y/n): " ack
