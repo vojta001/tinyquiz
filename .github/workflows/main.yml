@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nixbuild/nix-quick-install-action@v5
+        with:
+          nix_version: 2.4pre20201205_a5d85d0
+          nix_conf: experimental-features = nix-command flakes
+      - uses: actions/checkout@v2
+      # TODO reuse cache even when key changes and then do GC
+      - uses: actions/cache@v2
+        id: cache-nix
+        with:
+          path:  ~/nix
+          key: ${{ hashFiles('flake.nix') }}-${{ hashFiles('flake.lock') }}-${{ hashFiles('deps.nix') }}
+      - name: Extract the cache
+        if: steps.cache-nix.outputs.cache-hit
+        run: sudo mkdir -p /nix && sudo rsync --recursive --archive ~/nix/ /nix
+      - name: Build
+        run: 'outpath="$(nix build --print-build-logs --no-link --json .# | jq -r .[0].outputs.out)" && echo "tinyquiz-build=$outpath" >> $GITHUB_ENV'
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ${{ env.tinyquiz-build }}/**
+          retention-days: 7
+          if-no-files-found: error
+      - name: Prepare /nix/store for caching
+        if: '!steps.cache-nix.outputs.cache-hit'
+        run: sudo rsync --recursive --archive /nix/ ~/nix

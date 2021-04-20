@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"time"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
+	"vkane.cz/tinyquiz/pkg/model/ent/migrate"
 	rtcomm "vkane.cz/tinyquiz/pkg/rtcomm"
 
 	"github.com/julienschmidt/httprouter"
@@ -20,8 +20,8 @@ type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	templateCache map[string]*template.Template
-	model  *model.Model
-	rtClients *rtcomm.Clients
+	model         *model.Model
+	rtClients     *rtcomm.Clients
 }
 
 type templateData struct {
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	if c, err := ent.Open("postgres", "host='127.0.0.1' sslmode=disable dbname=tinyquiz"); err == nil {
-		if err := c.Schema.Create(context.Background()); err != nil {
+		if err := c.Schema.Create(context.Background(), migrate.WithDropIndex(true), migrate.WithDropColumn(true)); err != nil {
 			errorLog.Fatal(err)
 		}
 		app.model = model.NewModel(c)
@@ -57,9 +57,9 @@ func main() {
 
 	//TODO remove debug print
 	go func() {
-		for range time.Tick(2*time.Second){
-			sessions, clients := app.rtClients.Count()
-			fmt.Printf("There are %d sessions with total of %d clients\n", sessions, clients)
+		for range time.Tick(2 * time.Second) {
+			//sessions, clients := app.rtClients.Count()
+			//fmt.Printf("There are %d sessions with total of %d clients\n", sessions, clients)
 		}
 	}()
 
