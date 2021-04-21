@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -23,7 +24,13 @@ func (Game) Fields() []ent.Field {
 
 func (Game) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("sessions", Session.Type),
-		edge.To("questions", Question.Type),
+		edge.To("sessions", Session.Type).
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Restrict,
+			}),
+		edge.To("questions", Question.Type).
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Cascade,
+			}),
 	}
 }

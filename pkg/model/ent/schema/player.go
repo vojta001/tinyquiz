@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -34,6 +35,9 @@ func (Player) Edges() []ent.Edge {
 			Ref("players").
 			Unique().
 			Required(),
-		edge.To("answers", Answer.Type),
+		edge.To("answers", Answer.Type).
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Cascade,
+			}),
 	}
 }

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -30,7 +31,13 @@ func (Session) Edges() []ent.Edge {
 			Ref("sessions").
 			Unique().
 			Required(),
-		edge.To("players", Player.Type),
-		edge.To("askedQuestions", AskedQuestion.Type),
+		edge.To("players", Player.Type).
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Cascade,
+			}),
+		edge.To("askedQuestions", AskedQuestion.Type).
+			Annotations(entsql.Annotation{
+				OnDelete: entsql.Cascade,
+			}),
 	}
 }
