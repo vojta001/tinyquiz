@@ -37,9 +37,3 @@ func (Player) Edges() []ent.Edge {
 		edge.To("answers", Answer.Type),
 	}
 }
-
-func (Player) Config() ent.Config {
-	return ent.Config{
-		Table: "players",
-	}
-}

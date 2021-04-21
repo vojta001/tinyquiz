@@ -37,9 +37,3 @@ func (Question) Edges() []ent.Edge {
 		edge.To("asked", AskedQuestion.Type),
 	}
 }
-
-func (Question) Config() ent.Config {
-	return ent.Config{
-		Table: "questions",
-	}
-}

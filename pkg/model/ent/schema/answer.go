@@ -34,9 +34,3 @@ func (Answer) Edges() []ent.Edge {
 			Required(),
 	}
 }
-
-func (Answer) Config() ent.Config {
-	return ent.Config{
-		Table: "answers",
-	}
-}

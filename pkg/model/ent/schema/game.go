@@ -27,9 +27,3 @@ func (Game) Edges() []ent.Edge {
 		edge.To("questions", Question.Type),
 	}
 }
-
-func (Game) Config() ent.Config {
-	return ent.Config{
-		Table: "games",
-	}
-}

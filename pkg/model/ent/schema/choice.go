@@ -32,9 +32,3 @@ func (Choice) Edges() []ent.Edge {
 		edge.To("answers", Answer.Type),
 	}
 }
-
-func (Choice) Config() ent.Config {
-	return ent.Config{
-		Table: "options",
-	}
-}

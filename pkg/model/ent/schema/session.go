@@ -34,9 +34,3 @@ func (Session) Edges() []ent.Edge {
 		edge.To("askedQuestions", AskedQuestion.Type),
 	}
 }
-
-func (Session) Config() ent.Config {
-	return ent.Config{
-		Table: "sessions",
-	}
-}
