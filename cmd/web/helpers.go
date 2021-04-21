@@ -35,8 +35,6 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 		}
 
 		if layouts, err := filepath.Glob(filepath.Join(dir, "*.layout.tmpl.html")); err == nil && len(layouts) > 0 {
-			fmt.Println(layouts)
-			fmt.Println(filepath.Rel(dir, layouts[0]))
 			ts, err = ts.ParseFiles(layouts...)
 			if err != nil {
 				return nil, err
