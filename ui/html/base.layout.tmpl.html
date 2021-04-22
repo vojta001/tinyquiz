@@ -3,14 +3,19 @@
 <html lang='cs'>
 <head>
 	<meta charset='utf-8'>
+	<meta name="viewport" content="width=device-width">
 	<title>Tinyquiz</title>
 	<link rel="stylesheet" href="/static/style.css">
+	<link rel="icon" type="image/svg+xml" href="/static/logo_tiny.svg">
 	{{ block "additional-css" . }}{{ end }}
 	<script src="/static/script.js" defer type="text/javascript"></script>
 	{{ block "additional-js" . }}{{ end }}
 </head>
 <body>
-<header>
+<header id="logo">
+	<a href="/"><img src="/static/logo.svg" alt="Tinyquiz logo"></a>
+</header>
+<header id="title">
 	{{- block "header" . }}{{ end -}}
 </header>
 <main>

@@ -40,6 +40,13 @@
 
 #question > h1 {
     font-size: 3rem;
+    text-align: center;
+}
+
+#question .answers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 #question .answer {
@@ -62,7 +69,7 @@
 body.organiser #controls {
     display: flex;
     padding-right: 20vw;
-    justify-content: flex-end;
+    align-self: flex-end;
 }
 
 #session-code {

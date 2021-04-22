@@ -1,22 +1,30 @@
 {{- template "base" . -}}
 
 {{- define "additional-css" -}}
+	<link rel="stylesheet" href="/static/results.css">
 {{ end -}}
 
 {{- define "additional-js" -}}
 {{ end -}}
 
 {{- define "header" }}
-	<h1>{{ .Session.Edges.Game.Name }} hrána {{ .Session.Started.Format "2006.01.02 15:04:05 MST" }}</h1>
-	<h2>{{ if .Player.Organiser }}Organizátor{{ else }}Hráč{{ end }} {{ .Player.Name }}</h2>
+	<h1>{{ .Session.Edges.Game.Name }}</h1>
 {{ end -}}
 
 {{- define "main" }}
-<table>
-	<tbody>
-	{{ range .Results }}
-		<tr><td>{{ .Place }}. místo</td><td>{{ .Player.Name }}</td><td>{{ .Points }}b</td></tr>
-	{{ end }}
-	</tbody>
-</table>
+	<dl style="margin-bottom: 3rem;">
+		<dt>Hrána</dt>
+		<dd>{{ .Session.Started.Format "2006.01.02 15:04:05" }}</dd>
+		<dt>{{ if .Player.Organiser }}Organizátor{{ else }}Hráč{{ end }}</dt>
+		<dd>{{ .Player.Name }}</dd>
+	</dl>
+	<div style="flex-grow: 1;">
+		<table>
+			<tbody>
+			{{ range .Results }}
+				<tr><td class="place{{ if eq .Place 1 }} first{{ else if eq .Place 2 }} second{{ else if eq .Place 3 }} third{{ end }}">{{ .Place }}</td><td>{{ .Player.Name }}</td><td>{{ .Points }}b</td></tr>
+			{{ end }}
+			</tbody>
+		</table>
+	</div>
 {{ end -}}
