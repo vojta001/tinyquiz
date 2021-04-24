@@ -41,6 +41,7 @@
 #question > h1 {
     font-size: 3rem;
     text-align: center;
+    margin-bottom: .2rem;
 }
 
 #question .answers {
@@ -51,6 +52,14 @@
 
 #question .answer {
     font-size: 2rem;
+}
+
+#timer {
+    height: 2px;
+    background-color: blue;
+    margin-bottom: 5rem;
+    transition: width .2s;
+    width: 0;
 }
 
 .answer.selected {

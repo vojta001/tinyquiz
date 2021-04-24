@@ -12,8 +12,9 @@ type Player struct {
 }
 
 type QuestionUpdate struct {
-	Title   string   `json:"title"`
-	Answers []Answer `json:"answers"`
+	Title         string   `json:"title"`
+	RemainingTime uint64   `json:"remainingTime"`
+	Answers       []Answer `json:"answers"`
 }
 
 type Answer struct {

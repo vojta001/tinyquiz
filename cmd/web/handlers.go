@@ -140,8 +140,9 @@ func (app *application) nextQuestion(w http.ResponseWriter, r *http.Request, par
 
 	if player, err := app.model.GetPlayerWithSessionAndGame(playerUid, r.Context()); err == nil {
 		var sessionId = player.Edges.Session.ID
-		if err := app.model.NextQuestion(sessionId, time.Now(), r.Context()); err == nil {
-			if su, err := app.model.GetQuestionStateUpdate(sessionId, r.Context()); err == nil {
+		var now = time.Now()
+		if err := app.model.NextQuestion(sessionId, now, r.Context()); err == nil {
+			if su, err := app.model.GetQuestionStateUpdate(sessionId, now, r.Context()); err == nil {
 				app.rtClients.SendToAll(sessionId, su)
 				w.WriteHeader(http.StatusNoContent)
 				return

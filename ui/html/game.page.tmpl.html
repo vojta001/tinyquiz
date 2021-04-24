@@ -22,6 +22,7 @@
 	</template>
 	<template id="question-template">
 		<h1 class="question"></h1>
+		<div id="timer"></div>
 		<div class="answers"></div>
 	</template>
 	<section id="question"></section>
@@ -85,6 +86,7 @@
 					questionClone.querySelector('.question').innerText = data.question.title;
 					const answers = questionClone.querySelector('.answers');
 					const organiser = document.body.classList.contains('organiser');
+					const timer = questionClone.querySelector("#timer");
 					for (const answer of data.question.answers) {
 						const answerClone = answerTemplate.content.cloneNode(true);
 						const button = answerClone.querySelector('.answer');
@@ -107,6 +109,19 @@
 							});
 						}
 						answers.appendChild(answerClone);
+					}
+					if (data.question.remainingTime > 0) {
+						timer.style.width = "100%";
+						const initialRemainingTime = data.question.remainingTime;
+						const initialTime = Date.now();
+						let handler = () => {
+							const remainingTime = Math.max(initialRemainingTime - (Date.now() - initialTime), 0);
+							timer.style.width = String(remainingTime / initialRemainingTime * 100) + "%";
+							if (remainingTime > 0) {
+								window.setTimeout(handler, 100);
+							}
+						};
+						window.setTimeout(handler, 100);
 					}
 					questionSection.appendChild(questionClone);
 				}

@@ -131,7 +131,7 @@ func (app *application) processWebSocket(w http.ResponseWriter, r *http.Request,
 		var ch = make(chan rtcomm.StateUpdate, suBufferSize)
 		app.rtClients.AddClient(player.Edges.Session.ID, ch)
 		defer app.rtClients.RemoveClient(player.Edges.Session.ID, ch)
-		if su, err := app.model.GetFullStateUpdate(player.Edges.Session.ID, r.Context()); err == nil {
+		if su, err := app.model.GetFullStateUpdate(player.Edges.Session.ID, time.Now(), r.Context()); err == nil {
 			select {
 			case ch <- su:
 				break

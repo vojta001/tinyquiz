@@ -167,7 +167,7 @@ func (m *Model) GetPlayersStateUpdate(sessionId uuid.UUID, c context.Context) (r
 	}
 }
 
-func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, c context.Context) (rtcomm.StateUpdate, error) {
+func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, now time.Time, c context.Context) (rtcomm.StateUpdate, error) {
 	tx, err := m.c.BeginTx(c, &sql.TxOptions{
 		Isolation: sql.LevelRepeatableRead,
 		ReadOnly:  true,
@@ -181,6 +181,11 @@ func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, c context.Context) (
 		var q = aq.Edges.Question
 		var qu rtcomm.QuestionUpdate
 		qu.Title = q.Title
+		if !aq.Ended.After(now) {
+			qu.RemainingTime = 0
+		} else {
+			qu.RemainingTime = uint64(aq.Ended.Sub(now).Round(time.Millisecond).Milliseconds())
+		}
 		qu.Answers = make([]rtcomm.Answer, 0, len(q.Edges.Choices))
 		for i := 0; i < len(q.Edges.Choices); i++ {
 			qu.Answers = append(qu.Answers, rtcomm.Answer{
@@ -198,12 +203,12 @@ func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, c context.Context) (
 }
 
 //TODO reuse transaction
-func (m *Model) GetFullStateUpdate(sessionId uuid.UUID, c context.Context) (rtcomm.StateUpdate, error) {
+func (m *Model) GetFullStateUpdate(sessionId uuid.UUID, now time.Time, c context.Context) (rtcomm.StateUpdate, error) {
 	su, err := m.GetPlayersStateUpdate(sessionId, c)
 	if err != nil {
 		return rtcomm.StateUpdate{}, err
 	}
-	if su2, err := m.GetQuestionStateUpdate(sessionId, c); err == nil {
+	if su2, err := m.GetQuestionStateUpdate(sessionId, now, c); err == nil {
 		su.Question = su2.Question
 	} else {
 		return rtcomm.StateUpdate{}, err
