@@ -30,7 +30,7 @@
 
         unset GOROOT # Use the one bundled into the binary. I don't currently know who sets this to the wrong one
 
-        '${pkgs.findutils}/bin/find' cmd pkg ui/html | '${pkgs.entr}/bin/entr' -dr '${pkgs.go}/bin/go' run ./cmd/web
+        '${pkgs.findutils}/bin/find' cmd pkg ui | '${pkgs.entr}/bin/entr' -dr '${pkgs.go}/bin/go' run ./cmd/web
       '';
       packages.x86_64-linux.devDb = pkgs.writeShellScriptBin "devDb" ''
         '${pkgs.postgresql}/bin/postgres' -D .pg-data -k "$PWD/.pg-sockets" -c log_statement=all #-c listen_addresses="" # Goland does not support connecting over socket
