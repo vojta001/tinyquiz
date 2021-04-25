@@ -35,5 +35,83 @@
       packages.x86_64-linux.devDb = pkgs.writeShellScriptBin "devDb" ''
         '${pkgs.postgresql}/bin/postgres' -D .pg-data -k "$PWD/.pg-sockets" -c log_statement=all #-c listen_addresses="" # Goland does not support connecting over socket
       '';
+      nixosModules.web = { config, lib, pkgs, ... }:
+      let
+        cfg = config.services.tinyquiz;
+      in
+        {
+          options = {
+            services.tinyquiz = {
+              enable = lib.mkEnableOption "tinyquiz";
+
+              postgresql.enable = lib.mkOption {
+                type = lib.types.bool;
+                default = true;
+                description = ''
+                  Whether the set up the postgresql database for tinyquiz automatically.
+                '';
+              };
+              config = lib.mkOption {
+                type = lib.types.attrsOf lib.types.str;
+              };
+            };
+          };
+          config = lib.mkIf cfg.enable {
+            users.groups.tinyquiz = {};
+            users.users.tinyquiz = {
+              description = "Tinyquiz service user";
+              group = "tinyquiz";
+              isSystemUser = true;
+            };
+            systemd.services.tinyquiz = {
+              description = "Tinyquiz service";
+              wantedBy = [ "multi-user.target" ];
+              after = [ "network.target" (lib.mkIf cfg.postgresql.enable "postgresql.service") ];
+
+              serviceConfig = {
+                ExecStart = "${self.packages.x86_64-linux.tinyquiz-web}/bin/web";
+                User = "tinyquiz";
+              };
+              environment = cfg.config;
+            };
+            services.tinyquiz.config = if cfg.postgresql.enable then {
+              TINYQUIZ_PG_HOST = "/run/postgresql";
+            } else {};
+            services.postgresql = lib.mkIf cfg.postgresql.enable {
+              enable = true;
+              ensureDatabases = [ "tinyquiz" ];
+              ensureUsers = [
+                {
+                  name = "tinyquiz";
+                  ensurePermissions = {
+                    "DATABASE \"tinyquiz\"" = "ALL PRIVILEGES";
+                  };
+                }
+              ];
+            };
+          };
+        };
+      checks.x86_64-linux.module = (import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }: {
+        system = "x86_64-linux";
+        machine = { config, pkgs, ... }:
+        {
+          require = [
+            self.nixosModules.web
+          ];
+          services.tinyquiz = {
+            enable = true;
+            config = {
+              TINYQUIZ_LISTEN = ":8080";
+            };
+          };
+          systemd.services.postgresql.serviceConfig.TimeoutSec = pkgs.lib.mkForce "3600"; # wait for postgresql even on very slow machines. Not using "infinity" is just a safeguard
+        };
+        testScript = ''
+          machine.start()
+          machine.wait_for_unit("default.target")
+          machine.wait_for_open_port(8080)
+          machine.succeed("curl --fail http://localhost:8080")
+        '';
+      })) { system = "x86_64-linux"; inherit pkgs; };
     };
 }
