@@ -178,22 +178,27 @@ func (m *Model) GetQuestionStateUpdate(sessionId uuid.UUID, now time.Time, c con
 	defer tx.Commit()
 
 	if aq, err := tx.Question.Query().WithChoices().Where(question.HasAskedWith(askedquestion.HasSessionWith(session.ID(sessionId)))).QueryAsked().WithQuestion(func(q *ent.QuestionQuery) { q.WithChoices() }).Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {
-		var q = aq.Edges.Question
-		var qu rtcomm.QuestionUpdate
-		qu.Title = q.Title
-		if !aq.Ended.After(now) {
-			qu.RemainingTime = 0
+		// either show the current question or hide the old one
+		if aq.Ended == nil {
+			var q = aq.Edges.Question
+			var qu rtcomm.QuestionUpdate
+			qu.Title = q.Title
+			if ends := aq.Asked.Add(time.Duration(q.DefaultLength) * time.Millisecond); !now.Before(ends) {
+				qu.RemainingTime = 0
+			} else {
+				qu.RemainingTime = uint64(ends.Sub(now).Round(time.Millisecond).Milliseconds())
+			}
+			qu.Answers = make([]rtcomm.Answer, 0, len(q.Edges.Choices))
+			for i := 0; i < len(q.Edges.Choices); i++ {
+				qu.Answers = append(qu.Answers, rtcomm.Answer{
+					ID:    q.Edges.Choices[i].ID.String(),
+					Title: q.Edges.Choices[i].Title,
+				})
+			}
+			return rtcomm.StateUpdate{Question: &qu}, nil
 		} else {
-			qu.RemainingTime = uint64(aq.Ended.Sub(now).Round(time.Millisecond).Milliseconds())
+			return rtcomm.StateUpdate{Break: &rtcomm.BreakUpdate{}}, nil
 		}
-		qu.Answers = make([]rtcomm.Answer, 0, len(q.Edges.Choices))
-		for i := 0; i < len(q.Edges.Choices); i++ {
-			qu.Answers = append(qu.Answers, rtcomm.Answer{
-				ID:    q.Edges.Choices[i].ID.String(),
-				Title: q.Edges.Choices[i].Title,
-			})
-		}
-		return rtcomm.StateUpdate{Question: &qu}, nil
 	} else if ent.IsNotFound(err) {
 		// There is simply no current question, which is not an error
 		return rtcomm.StateUpdate{}, nil
@@ -238,8 +243,10 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, now time.Time, c context.Conte
 
 	if current, err := tx.AskedQuestion.Query().Where(askedquestion.HasSessionWith(session.ID(sessionId))).WithQuestion().Order(ent.Desc(askedquestion.FieldAsked)).First(c); err == nil {
 		query.Where(question.OrderGT(current.Edges.Question.Order))
-		if current.Ended.After(now) {
-			if _, err := current.Update().SetEnded(now).Save(c); err != nil {
+		if current.Ended == nil {
+			if _, err := current.Update().SetEnded(now).Save(c); err == nil {
+				return tx.Commit()
+			} else {
 				return err
 			}
 		}
@@ -248,7 +255,7 @@ func (m *Model) NextQuestion(sessionId uuid.UUID, now time.Time, c context.Conte
 	}
 
 	if next, err := query.First(c); err == nil {
-		if _, err := tx.AskedQuestion.Create().SetID(uuid.New()).SetAsked(now).SetSessionID(sessionId).SetQuestion(next).SetEnded(now.Add(time.Duration(int64(next.DefaultLength)) * time.Millisecond)).Save(c); err != nil {
+		if _, err := tx.AskedQuestion.Create().SetID(uuid.New()).SetAsked(now).SetSessionID(sessionId).SetQuestion(next).Save(c); err != nil {
 			return err
 		}
 	} else if ent.IsNotFound(err) {
@@ -292,7 +299,7 @@ func (m *Model) SaveAnswer(playerId uuid.UUID, choiceId uuid.UUID, now time.Time
 
 	// check if the question is open
 	// Asked[0] is guaranteed to exist thanks to the previous query
-	if !q.Edges.Asked[0].Ended.After(now) {
+	if q.Edges.Asked[0].Ended != nil || q.Edges.Asked[0].Asked.Add(time.Duration(q.DefaultLength)*time.Millisecond).Before(now) {
 		return nil, QuestionClosed
 	}
 

@@ -3,6 +3,7 @@ package rtcomm
 type StateUpdate struct {
 	Players  []Player        `json:"players,omitempty"`
 	Question *QuestionUpdate `json:"question,omitempty"`
+	Break    *BreakUpdate    `json:"break,omitempty"`
 	Results  bool            `json:"results,omitempty"`
 }
 
@@ -20,4 +21,8 @@ type QuestionUpdate struct {
 type Answer struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
+}
+
+type BreakUpdate struct {
+	//TODO add interim results
 }

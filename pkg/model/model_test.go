@@ -86,7 +86,7 @@ func newTestModelWithData(t *testing.T) *Model {
 	players := tx.Player.CreateBulk(playersC...).SaveX(c)
 
 	var askedQuestionsC = []*ent.AskedQuestionCreate{
-		tx.AskedQuestion.Create().SetID(uuid.MustParse("72a1bb9c-67e7-4d59-80fa-80ce729629d3")).SetAsked(time.Unix(1613387996, 0)).SetQuestion(questions[0]).SetSession(sessions[0]).SetEnded(time.Unix(1613388001, 0)),
+		tx.AskedQuestion.Create().SetID(uuid.MustParse("72a1bb9c-67e7-4d59-80fa-80ce729629d3")).SetAsked(time.Unix(1613387996, 0)).SetQuestion(questions[0]).SetSession(sessions[0]),
 	}
 
 	askedQuestions := tx.AskedQuestion.CreateBulk(askedQuestionsC...).SaveX(c)
@@ -122,8 +122,16 @@ func TestModel_NextQuestion_noNextQuestion(t *testing.T) {
 	m := newTestModelWithData(t)
 	c := context.Background()
 
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388005, 0), c); err != nil {
+		t.Fatalf("Unexpected error when switching to next question (closing the current one): %v", err)
+	}
+
 	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388006, 0), c); err != nil {
-		t.Fatalf("Unexpected error when switching to next question: %v", err)
+		t.Fatalf("Unexpected error when switching to next question (from a break): %v", err)
+	}
+
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388007, 0), c); err != nil {
+		t.Fatalf("Unexpected error when switching to next question (from a break): %v", err)
 	}
 
 	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613388008, 0), c); err == nil {
@@ -164,5 +172,31 @@ func TestModel_SaveAnswer_again(t *testing.T) {
 		t.Fatalf("Saving answer again succeeded")
 	} else if !errors.Is(err, AlreadyAnswered) {
 		t.Fatalf("Saving answer again failed with unexpected error type: %v", err)
+	}
+}
+
+func TestModel_SaveAnswer_late(t *testing.T) {
+	m := newTestModelWithData(t)
+	c := context.Background()
+
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), uuid.MustParse("5155b997-eb2c-4cd0-a067-2bb01379730f"), time.Unix(1613388026, 1), c); err == nil {
+		t.Fatalf("Saving answer too late succeeded")
+	} else if !errors.Is(err, QuestionClosed) {
+		t.Fatalf("Saving answer too late failed with unexpected error type: %v", err)
+	}
+}
+
+func TestModel_SaveAnswer_closed(t *testing.T) {
+	m := newTestModelWithData(t)
+	c := context.Background()
+
+	if err := m.NextQuestion(uuid.MustParse("b3d2f5b2-d5eb-4461-b352-622431a35b12"), time.Unix(1613387997, 0), c); err != nil {
+		t.Fatalf("Unexpected error when switching to next question (closing the current one): %v", err)
+	}
+
+	if _, err := m.SaveAnswer(uuid.MustParse("321f3bb4-f789-49db-ad14-45299a4725a0"), uuid.MustParse("5155b997-eb2c-4cd0-a067-2bb01379730f"), time.Unix(1613387998, 0), c); err == nil {
+		t.Fatalf("Saving answer to closed question succeeded")
+	} else if !errors.Is(err, QuestionClosed) {
+		t.Fatalf("Saving answer to closed question failed with unexpected error type: %v", err)
 	}
 }

@@ -127,6 +127,10 @@
 				}
 			}
 
+			if ('break' in data) {
+				questionSection.innerHTML = '';
+			}
+
 			if ('results' in data && data.results === true) {
 				window.location.pathname = "/results/" + encodeURIComponent(playerId);
 			}
