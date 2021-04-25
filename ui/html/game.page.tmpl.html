@@ -41,7 +41,7 @@
 
 		const playerId = namesSection.dataset.myId;
 
-		const socket = new WebSocket('ws://' + window.location.host + '/ws/' + encodeURIComponent(playerId));
+		const socket = new WebSocket((document.location.protocol.toLowerCase() === 'https:' ? 'wss' : 'ws') + '://' + window.location.host + '/ws/' + encodeURIComponent(playerId));
 
 		document.addEventListener("DOMContentLoaded", () => {
 			const next = document.querySelector('#controls .next');
