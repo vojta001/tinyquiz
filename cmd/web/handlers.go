@@ -123,8 +123,11 @@ func (app *application) game(w http.ResponseWriter, r *http.Request, params http
 		td.P = player
 
 		app.render(w, r, "game.page.tmpl.html", td)
-	} else {
+	} else if errors.Is(err, model.NoSuchEntity) {
 		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
 		return
 	}
 }
