@@ -13,6 +13,8 @@
         src = ./.;
         goDeps = ./deps.nix;
         preBuild = "go generate vkane.cz/tinyquiz/...";
+        checkPhase = "go test -race vkane.cz/tinyquiz/...";
+        doCheck = true;
         goPackagePath = "vkane.cz/tinyquiz";
         subPackages = [ "cmd/${name}" ];
       });
