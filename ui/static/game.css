@@ -1,6 +1,7 @@
 #names {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
+    flex-wrap: wrap;
     padding: 0 10vw;
     font-size: 1.5rem;
 }
@@ -11,7 +12,7 @@
 
 .name.organiser::before {
     content: "👑";
-    margin-right: .75rem;
+    margin-right: .4rem;
 }
 
 .name.organiser {
@@ -22,6 +23,7 @@
     animation-name: appear;
     animation-duration: .5s;
     display: inline-block;
+    margin: 0 1rem;
 }
 
 #question {
