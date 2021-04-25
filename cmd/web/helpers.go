@@ -8,20 +8,28 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"html/template"
 	"io"
+	"io/fs"
 	"net"
 	"net/http"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"time"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
 	"vkane.cz/tinyquiz/pkg/rtcomm"
+	"vkane.cz/tinyquiz/ui"
 )
 
-func newTemplateCache(dir string) (map[string]*template.Template, error) {
+func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	pages, err := filepath.Glob(filepath.Join(dir, "*.page.tmpl.html"))
+	templates, err := fs.Sub(ui.HTMLTemplates, "html")
+	if err != nil {
+		return nil, err
+	}
+
+	pages, err := fs.Glob(templates, "*.page.tmpl.html")
 	if err != nil {
 		return nil, err
 	}
@@ -29,27 +37,23 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		ts, err := template.ParseFiles(page)
+		ts, err := template.ParseFS(templates, page)
 		if err != nil {
 			return nil, err
 		}
 
-		if layouts, err := filepath.Glob(filepath.Join(dir, "*.layout.tmpl.html")); err == nil && len(layouts) > 0 {
-			ts, err = ts.ParseFiles(layouts...)
-			if err != nil {
-				return nil, err
-			}
-		} else if err != nil {
+		tsL, err := ts.ParseFS(templates, "*.layout.tmpl.html")
+		if err != nil && !strings.HasPrefix(err.Error(), "template: pattern matches no files") {
 			return nil, err
+		} else if err == nil {
+			ts = tsL
 		}
 
-		if partials, err := filepath.Glob(filepath.Join(dir, "*.partial.tmpl.html")); err == nil && len(partials) > 0 {
-			ts, err = ts.ParseFiles(partials...)
-			if err != nil {
-				return nil, err
-			}
-		} else if err != nil {
+		tsP, err := ts.ParseFS(templates, "*.partial.tmpl.html")
+		if err != nil && !strings.HasPrefix(err.Error(), "template: pattern matches no files") {
 			return nil, err
+		} else if err == nil {
+			ts = tsP
 		}
 
 		cache[name] = ts

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"vkane.cz/tinyquiz/pkg/model/ent"
 	"vkane.cz/tinyquiz/pkg/model/ent/migrate"
 	rtcomm "vkane.cz/tinyquiz/pkg/rtcomm"
+	"vkane.cz/tinyquiz/ui"
 
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
@@ -75,7 +77,7 @@ func main() {
 		rtClients: rtcomm.NewClients(),
 	}
 
-	if tc, err := newTemplateCache("./ui/html/"); err == nil {
+	if tc, err := newTemplateCache(); err == nil {
 		app.templateCache = tc
 	} else {
 		errorLog.Fatal(err)
@@ -109,7 +111,11 @@ func main() {
 
 	mux.GET("/ws/:playerUid", app.processWebSocket)
 
-	mux.ServeFiles("/static/*filepath", http.Dir("./ui/static/"))
+	if static, err := fs.Sub(ui.StaticFiles, "static"); err == nil {
+		mux.ServeFiles("/static/*filepath", http.FS(static))
+	} else {
+		errorLog.Fatal(err)
+	}
 
 	var srv = &http.Server{
 		Addr:     addr,
