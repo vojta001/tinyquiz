@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"vkane.cz/tinyquiz/pkg/gameCreator"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
 	"vkane.cz/tinyquiz/pkg/rtcomm"
@@ -231,4 +232,76 @@ func (app *application) resultsGeneral(w http.ResponseWriter, r *http.Request, p
 	}
 
 	app.render(w, r, "results.page.tmpl.html", td)
+}
+
+func (app *application) downloadTemplate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8; header=absent")
+	w.Header().Set("Content-Disposition", "attachment; filename=tinyquiz_template.csv")
+	w.Header().Set("Cache-Control", "max-age=21600" /* 6 hours */)
+	if err := gameCreator.CreateTemplate(w, 10, 4); err != nil {
+		app.errorLog.Printf("creating template: %v", err)
+		return
+	}
+}
+
+func (app *application) createGame(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1000000)
+	// shall never write to temp files thanks to MaxBytesReader
+	if err := r.ParseMultipartForm(2000000); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var name = r.PostFormValue("name")
+	var author = r.PostFormValue("author")
+	file, _, err := r.FormFile("game")
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if parsedGame, err := gameCreator.Parse(file, 500, 100); err == nil {
+		if game, err := app.model.CreateGame(parsedGame, name, author, r.Context()); err == nil {
+			http.Redirect(w, r, "/quiz/"+url.PathEscape(game.ID.String()), http.StatusSeeOther)
+			return
+		} else {
+			app.serverError(w, err)
+			return
+		}
+	} else if errors.Is(err, gameCreator.ErrInvalidSyntax) || errors.Is(err, gameCreator.ErrTooManyQuestions) || errors.Is(err, gameCreator.ErrTooManyChoices) {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+}
+
+func (app *application) showGame(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	type gameData struct {
+		Game *ent.Game
+		templateData
+	}
+	td := &gameData{}
+	setDefaultTemplateData(&td.templateData)
+
+	var gameUid uuid.UUID
+	if uid, err := uuid.Parse(params.ByName("gameUid")); err == nil {
+		gameUid = uid
+	} else {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if game, err := app.model.GetGameWithQuestionsAndChoices(gameUid, r.Context()); err == nil {
+		td.Game = game
+		w.Header().Set("Cache-Control", "max-age=3600" /* 1 hour */)
+		app.render(w, r, "game-overview.page.tmpl.html", td)
+		return
+	} else if errors.Is(err, model.NoSuchEntity) {
+		app.clientError(w, http.StatusNotFound)
+		return
+	} else {
+		app.serverError(w, err)
+		return
+	}
 }

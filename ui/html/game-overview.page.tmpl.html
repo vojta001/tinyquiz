@@ -1,0 +1,31 @@
+{{- template "base" . -}}
+
+{{- define "additional-css" -}}
+{{ end -}}
+
+{{- define "additional-js" -}}
+{{ end -}}
+
+{{- define "header" }}
+	<h1>{{ .Game.Name }} ({{ .Game.Code }})</h1>
+{{ end -}}
+
+{{- define "main" }}
+	<dl>
+		<dt>Vytvořena</dt>
+		<dd>{{ .Game.Created.Format "2006.01.02 15:04:05" }}</dd>
+		<dt>Autor</dt>
+		<dd>{{ .Game.Author }}</dd>
+	</dl>
+	<ol>
+		{{ range .Game.Edges.Questions -}}
+			<li>{{ .Title }} ({{ .DefaultLength }}ms)
+				<ul>
+					{{ range .Edges.Choices -}}
+						<li>{{ .Title }}{{ if .Correct }} (správně){{ end }}</li>
+					{{ end }}
+				</ul>
+			</li>
+		{{ end }}
+	</ol>
+{{ end -}}

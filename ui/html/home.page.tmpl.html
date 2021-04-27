@@ -38,9 +38,11 @@
 	</section>
 	<section>
 		<h1>Vytvořit nový kvíz</h1>
-		<form id="new" method="get" action="/new">
-			<label>Jméno kvízu: <input type="text" name="quiz" placeholder="Jméno kvízu"></label>
+		<p>Stáhnout <a href="/template" download>šablonu nového kvízu</a></p>
+		<form id="new" enctype="multipart/form-data" method="post" action="/game">
+			<label>Jméno kvízu: <input type="text" name="name" placeholder="Jméno kvízu"></label>
 			<label>Jméno autora: <input type="text" name="author" placeholder="Jméno"></label>
+			<label>Kvíz: <input type="file" name="game" accept="text/csv"></label>
 			<input type="submit" value="Vytvořit">
 		</form>
 	</section>

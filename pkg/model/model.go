@@ -10,6 +10,7 @@ import (
 	"sort"
 	"time"
 	"vkane.cz/tinyquiz/pkg/codeGenerator"
+	"vkane.cz/tinyquiz/pkg/gameCreator"
 	"vkane.cz/tinyquiz/pkg/model/ent"
 	"vkane.cz/tinyquiz/pkg/model/ent/answer"
 	"vkane.cz/tinyquiz/pkg/model/ent/askedquestion"
@@ -384,6 +385,68 @@ func (m *Model) GetResults(playerId uuid.UUID, c context.Context) ([]PlayerResul
 		return results, s, p, nil
 	} else {
 		return nil, nil, nil, err
+	}
+}
+
+func (m *Model) CreateGame(game gameCreator.Game, name string, author string, c context.Context) (*ent.Game, error) {
+	tx, err := m.c.BeginTx(c, &sql.TxOptions{
+		Isolation: sql.LevelReadUncommitted,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var code []byte
+	if incremental, err := m.getCodeIncremental(c); err == nil {
+		if c, err := codeGenerator.GenerateRandomCode(incremental, codeRandomPartLength); err == nil {
+			code = c
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+
+	g, err := tx.Game.Create().SetID(uuid.New()).SetCreated(time.Now()).SetName(name).SetAuthor(author).SetCode(string(code)).Save(c)
+	if err != nil {
+		return nil, err
+	}
+
+	var questions = make([]*ent.QuestionCreate, 0, len(game.Questions))
+	var questionIds = make([]uuid.UUID, 0, len(game.Questions))
+	var choicesCount uint
+	for i, q := range game.Questions {
+		var id = uuid.New()
+		var questionCreate = tx.Question.Create().SetID(id).SetGame(g).SetDefaultLength(q.Length).SetOrder(i + 1).SetTitle(q.Title)
+		questions = append(questions, questionCreate)
+		questionIds = append(questionIds, id)
+		choicesCount += uint(len(q.Choices))
+	}
+	if _, err := tx.Question.CreateBulk(questions...).Save(c); err != nil {
+		return nil, err
+	}
+
+	var choices = make([]*ent.ChoiceCreate, 0, choicesCount)
+	for i, q := range game.Questions {
+		for _, c := range q.Choices {
+			var choiceCreate = tx.Choice.Create().SetID(uuid.New()).SetTitle(c.Title).SetCorrect(c.Correct).SetQuestionID(questionIds[i])
+			choices = append(choices, choiceCreate)
+		}
+	}
+	if _, err := tx.Choice.CreateBulk(choices...).Save(c); err != nil {
+		return nil, err
+	}
+	return g, tx.Commit()
+}
+
+func (m *Model) GetGameWithQuestionsAndChoices(gameId uuid.UUID, c context.Context) (*ent.Game, error) {
+	if game, err := m.c.Game.Query().Where(game.ID(gameId)).WithQuestions(func(q *ent.QuestionQuery) { q.WithChoices() }).Only(c); err == nil {
+		return game, err
+	} else if ent.IsNotFound(err) {
+		return nil, NoSuchEntity
+	} else {
+		return nil, err
 	}
 }
 
