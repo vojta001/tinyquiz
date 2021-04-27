@@ -1,104 +1,104 @@
 #names {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 0 10vw;
-    font-size: 1.5rem;
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	padding: 0 10vw;
+	font-size: 1.5rem;
 }
 
 .my-name {
-    font-weight: bold;
+	font-weight: bold;
 }
 
 .name.organiser::before {
-    content: "👑";
-    margin-right: .4rem;
+	content: "👑";
+	margin-right: .4rem;
 }
 
 .name.organiser {
-    color: gold;
+	color: gold;
 }
 
 .name {
-    animation-name: appear;
-    animation-duration: .5s;
-    display: inline-block;
-    margin: 0 1rem;
+	animation-name: appear;
+	animation-duration: .5s;
+	display: inline-block;
+	margin: 0 1rem;
 }
 
 #question {
-    flex-basis: 50%;
-    display: flex;
-    justify-content: flex-start;
-    padding-top: 10vh;
-    flex-direction: column;
-    align-items: center;
+	flex-basis: 50%;
+	display: flex;
+	justify-content: flex-start;
+	padding-top: 10vh;
+	flex-direction: column;
+	align-items: center;
 }
 
 #question * {
-    animation-name: appear;
-    animation-duration: .5s;
+	animation-name: appear;
+	animation-duration: .5s;
 }
 
 #question > h1 {
-    font-size: 3rem;
-    text-align: center;
-    margin-bottom: .2rem;
+	font-size: 3rem;
+	text-align: center;
+	margin-bottom: .2rem;
 }
 
 #question .answers {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 }
 
 #question .answer {
-    font-size: 2rem;
+	font-size: 2rem;
 }
 
 #timer {
-    height: 2px;
-    background-color: blue;
-    margin-bottom: 5rem;
-    transition: width .2s;
-    width: 0;
+	height: 2px;
+	background-color: blue;
+	margin-bottom: 5rem;
+	transition: width .2s;
+	width: 0;
 }
 
 .answer.selected {
-    font-weight: bold;
-    text-shadow: 2px 1px 5px #0003;
+	font-weight: bold;
+	text-shadow: 2px 1px 5px #0003;
 }
 
 /*body.organiser #question > .answers {
-    display: none;
+	display: none;
 }*/
 
 #controls {
-    display: none;
+	display: none;
 }
 
 body.organiser #controls {
-    display: flex;
-    padding-right: 20vw;
-    align-self: flex-end;
+	display: flex;
+	padding-right: 20vw;
+	align-self: flex-end;
 }
 
 #session-code {
-    display: none;
+	display: none;
 }
 
 body.organiser #session-code {
-    display: inline;
+	display: inline;
 }
 
 @keyframes appear {
-    from {
-        transform: scale(2, 2);
-        opacity: 0;
-    }
+	from {
+		transform: scale(2, 2);
+		opacity: 0;
+	}
 
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
+	to {
+		transform: scale(1, 1);
+		opacity: 1;
+	}
 }

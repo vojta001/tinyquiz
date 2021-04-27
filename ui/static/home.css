@@ -1,18 +1,18 @@
 main {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-    min-height: 100vh;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: center;
+	justify-content: center;
+	min-height: 100vh;
 }
 
 section {
-    border: 2px solid black;
-    margin: 2rem;
-    padding: 1rem;
+	border: 2px solid black;
+	margin: 2rem;
+	padding: 1rem;
 }
 
 #join, #play, #new {
-    display: flex;
-    flex-direction: column;
+	display: flex;
+	flex-direction: column;
 }
