@@ -72,7 +72,7 @@ func (m *Model) RegisterPlayer(playerName string, sessionCode string, now time.T
 	}
 	defer tx.Commit()
 
-	if s, err := tx.Session.Query().Where(session.Code(sessionCode)).Only(c); ent.IsNotFound(err) {
+	if s, err := tx.Session.Query().Where(session.CodeEqualFold(sessionCode)).Only(c); ent.IsNotFound(err) {
 		return nil, NoSuchEntity
 	} else if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (m *Model) CreateSession(organiserName string, gameCode string, now time.Ti
 	}
 	defer tx.Rollback()
 
-	if gameId, err := tx.Game.Query().Where(game.Code(gameCode)).OnlyID(c); err == nil {
+	if gameId, err := tx.Game.Query().Where(game.CodeEqualFold(gameCode)).OnlyID(c); err == nil {
 		if incremental, err := m.getCodeIncremental(c); err == nil {
 			if code, err := codeGenerator.GenerateRandomCode(incremental, codeRandomPartLength); err == nil {
 				if s, err := tx.Session.Create().SetID(uuid.New()).SetCreated(now).SetCode(string(code)).SetGameID(gameId).Save(c); err == nil {
