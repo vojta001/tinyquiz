@@ -1,16 +1,18 @@
 {
+
   description = "Tinyquiz – an open source online quiz platform";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nix-filter.url = "github:numtide/nix-filter/master";
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nix-filter }:
   let
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
     buildCmd = name:
       (pkgs.buildGoPackage {
         pname = "tinyquiz-${name}";
         version = "dev";
-        src = ./.;
+        src = with nix-filter.lib; filter { root = ./.; include = [ (inDirectory "cmd") (inDirectory "pkg") (inDirectory "ui") "go.mod" "go.sum" ]; };
         goDeps = ./deps.nix;
         preBuild = "go generate vkane.cz/tinyquiz/...";
         checkPhase = "go test -race vkane.cz/tinyquiz/...";

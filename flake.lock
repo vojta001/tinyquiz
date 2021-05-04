@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "nix-filter": {
+      "locked": {
+        "lastModified": 1619956448,
+        "narHash": "sha256-4OZjkK1vot9vdg+8jj9+hm4c6mSEc9/OJDQzNvLHBKE=",
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "rev": "cf06efe613a06f1505f187712a307c05b3901884",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "ref": "master",
+        "repo": "nix-filter",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1618886496,
@@ -18,6 +34,7 @@
     },
     "root": {
       "inputs": {
+        "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs"
       }
     }
