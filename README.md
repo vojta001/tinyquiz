@@ -38,7 +38,7 @@ Few of them send back HTML. That's accomplished by filling in an intermediary st
 
 ### pkg/model
 
-Model hosts all business logic, that is, all actions the user can make regardless of the protocol of invocation. Each exported method represent a logical action on its own and must depend on the model struct and its arguments only. This is crucial for testing.
+Model hosts all business logic, that is, all actions the user can make regardless of the protocol of invocation. Each exported method represents a logical action on its own and must depend on the model struct and its arguments only. This is crucial for testing.
 
 Except for edge cases, each method shall accept context.Context and use it to pass cancellation signals database calls etc.
 
@@ -56,10 +56,18 @@ Thanks to the strict separation of different parts of MVC, the model can be test
 
 Brief end-to-end testing may be added later.
 
+### Security
+
+Tinyquiz can hardly be viewed as critical application or as containing sensitive information, therefore certain trade-offs were accepted.
+
+There is no classical authentication; your identity is determined by the id contained in URL. This is usually viewed as bad practice, because the token gets saved in your browsing history, but in Tinyquiz, it becomes effectively worthless as soon as the quiz ends. On the other hand, it enables you to play multiple games in different browser tabs at the same time and to reaload the tabs anytime without loosing state - all while keeping the implementation very simple.
+
+Games and quizzes aren't protected by any password, just the code. It is pretty secure though, the code is made by concatenating a sequential part (to prevent collisions) and a random part (to make it difficult to guess).
+
+Unlike the previous part, no trade-offs were accepted in the server security. Go is a GCed language doing its best to prevent memory corruption bugs. All database queries are assembled by passing the user supplied input separately thus preventing SQL injection. HTML output is handled by the well tested `html/template` standard library which automatically context-aware escapes included content thus preventing XSS.
+
 ## Building and running
 
-*Go 1.16 is expected to be released in February 2021. It will bring static files embedding into the binary. Until it happens, the binary has to be run from the root of the project to be able to find the `ui` directory.*
-
-The reference way to build the app is in the `flake.nix`. For non-Nix users, building shall be pretty trivial though. Just obtain a new enough version of Go (see `go.mod`) and build the runnable package of your choice (usually `go build ./cmd/web`).
+The reference way to build the app is in the `flake.nix`. For non-Nix users, building shall be pretty trivial though. Just obtain a new enough version of Go (see `go.mod`) and build the runnable package of your choice (usually `go build ./cmd/web`). You may have to run `go generate ./...` to build the ORM files etc.
 
 Tinyquiz requires Postgresql, though other database systems might be added later thanks to ent. Postgresql configuration is currently hardcoded in the binary.
