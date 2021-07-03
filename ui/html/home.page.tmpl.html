@@ -58,7 +58,8 @@
 				</ul>
 			{{- end }}
 			<h1>Vytvořit nový kvíz</h1>
-			<p>Stáhnout <a href="/template" download>šablonu nového kvízu</a></p>
+			<p><a href="/template" download>Šablona nového kvízu</a>.</p>
+			<p><a href="/help">Nápověda</a></p>
 			<form id="new" enctype="multipart/form-data" method="post" action="/game">
 				<label>Jméno kvízu: <input type="text" name="name" placeholder="Jméno kvízu" required value="{{ .Title }}"></label>
 				<label>Jméno autora: <input type="text" name="author" placeholder="Jméno" required value="{{ .Name }}"></label>

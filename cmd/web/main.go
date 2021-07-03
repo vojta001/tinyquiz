@@ -111,6 +111,7 @@ func main() {
 	mux.GET("/template", app.downloadTemplate)
 	mux.POST("/game", app.createGame)
 	mux.GET("/quiz/:gameUid", app.showGame)
+	mux.GET("/help", app.help)
 
 	mux.GET("/ws/:playerUid", app.processWebSocket)
 

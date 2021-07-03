@@ -1,0 +1,24 @@
+{{- template "base" . -}}
+
+{{- define "additional-css" -}}
+	<link rel="stylesheet" href="/static/home.css">
+{{ end -}}
+
+{{- define "additional-js" -}}
+	<script src="/static/home.js"></script>
+{{ end -}}
+
+{{- define "header" }}
+	<h1>Popis souboru s otázkami</h1>
+{{ end -}}
+
+{{- define "main" }}
+		<div style="max-width: 75vw;">
+			<p>
+				Soubor je CSV (oddělovačem je čárka, kódování UTF-8) bez záhlaví. Lze jej otevřít a upravit obvyklými kancelářskými programy (Microsoft Excel, LibreOffice…).
+			</p>
+			<p>
+				Každý neprázdný řádek odpovídá buďto otázce, nebo odpovědi. Otázka má svůj nadpis v prvním sloupci. Odpověď má první sloupec prázný, svůj nadpis má ve druhém sloupci a váže se k nejbližší předcházející otázce. Otázky mohou volitelně (krom první) ve druhém sloupci uvést čas na odpověď v milisekundách, jinak se použije hodnota předchozí otázky. Odpovědi, které mají ve třetím sloupci číslo 1 se považují za správné.
+			</p>
+		</div>
+{{ end -}}

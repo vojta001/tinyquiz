@@ -56,6 +56,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request, formData ho
 	app.render(w, r, "home.page.tmpl.html", td)
 }
 
+func (app *application) help(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	app.render(w, r, "help.page.tmpl.html", nil)
+}
+
 func (app *application) play(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
