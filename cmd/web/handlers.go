@@ -14,12 +14,36 @@ import (
 	"vkane.cz/tinyquiz/pkg/rtcomm"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (app *application) homeSuccess(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	app.home(w, r, homeForm{}, http.StatusOK)
+}
+
+type homeForm struct {
+	Join struct {
+		Code   string
+		Name   string
+		Errors []string
+	}
+	NewSession struct {
+		Code   string
+		Name   string
+		Errors []string
+	}
+	NewGame struct {
+		Title  string
+		Name   string
+		Errors []string
+	}
+}
+
+func (app *application) home(w http.ResponseWriter, r *http.Request, formData homeForm, status int) {
 	type homeData struct {
 		Stats model.Stats
+		Form  homeForm
 		templateData
 	}
 	td := &homeData{}
+	td.Form = formData
 	setDefaultTemplateData(&td.templateData)
 
 	if stats, err := app.model.GetStats(r.Context()); err == nil {
@@ -28,7 +52,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request, params http
 		app.serverError(w, err)
 		return
 	}
-
+	w.WriteHeader(status)
 	app.render(w, r, "home.page.tmpl.html", td)
 }
 
@@ -40,9 +64,13 @@ func (app *application) play(w http.ResponseWriter, r *http.Request, params http
 
 	var code = strings.TrimSpace(params.ByName("code"))
 	var player = strings.ToLower(strings.TrimSpace(r.PostForm.Get("player")))
+	var form homeForm
+	form.Join.Code = code
+	form.Join.Name = player
 
 	if len(player) < 1 {
-		app.clientError(w, http.StatusBadRequest)
+		form.Join.Errors = []string{"Zadejte jméno hráče"}
+		app.home(w, r, form, http.StatusBadRequest)
 		return
 	}
 
@@ -61,10 +89,12 @@ func (app *application) play(w http.ResponseWriter, r *http.Request, params http
 		http.Redirect(w, r, "/game/"+url.PathEscape(player.ID.String()), http.StatusSeeOther)
 		return
 	} else if errors.Is(err, model.NoSuchEntity) {
-		app.clientError(w, http.StatusNotFound)
+		form.Join.Errors = []string{"Hra s tímto kódem nebyla nalezena"}
+		app.home(w, r, form, http.StatusNotFound)
 		return
 	} else if errors.Is(err, model.ConstraintViolation) {
-		app.clientError(w, http.StatusForbidden)
+		form.Join.Errors = []string{"Hráč s tímto jménem již existuje"}
+		app.home(w, r, form, http.StatusForbidden)
 		return
 	} else {
 		app.serverError(w, err)
@@ -81,9 +111,13 @@ func (app *application) createSession(w http.ResponseWriter, r *http.Request, pa
 
 	var code = strings.TrimSpace(r.PostForm.Get("code"))
 	var player = strings.ToLower(strings.TrimSpace(r.PostForm.Get("organiser")))
+	var form homeForm
+	form.NewSession.Code = code
+	form.NewSession.Name = player
 
 	if len(player) < 1 {
-		app.clientError(w, http.StatusBadRequest)
+		form.NewSession.Errors = []string{"Zadejte jméno organizátora"}
+		app.home(w, r, form, http.StatusBadRequest)
 		return
 	}
 
@@ -97,7 +131,8 @@ func (app *application) createSession(w http.ResponseWriter, r *http.Request, pa
 			return
 		}
 	} else if errors.Is(err, model.NoSuchEntity) {
-		app.clientError(w, http.StatusNotFound)
+		form.NewSession.Errors = []string{"Hra s tímto kódem nebyla nalezena"}
+		app.home(w, r, form, http.StatusNotFound)
 		return
 	} else {
 		app.serverError(w, err)
@@ -253,9 +288,13 @@ func (app *application) createGame(w http.ResponseWriter, r *http.Request, param
 	}
 	var name = r.PostFormValue("name")
 	var author = r.PostFormValue("author")
+	var form homeForm
+	form.NewGame.Title = name
+	form.NewGame.Name = author
 	file, _, err := r.FormFile("game")
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		form.NewGame.Errors = []string{"Nahrajte soubor s otázkami"}
+		app.home(w, r, form, http.StatusBadRequest)
 		return
 	}
 
@@ -267,11 +306,9 @@ func (app *application) createGame(w http.ResponseWriter, r *http.Request, param
 			app.serverError(w, err)
 			return
 		}
-	} else if errors.Is(err, gameCreator.ErrInvalidSyntax) || errors.Is(err, gameCreator.ErrTooManyQuestions) || errors.Is(err, gameCreator.ErrTooManyChoices) {
-		app.clientError(w, http.StatusBadRequest)
-		return
 	} else {
-		app.clientError(w, http.StatusBadRequest)
+		form.NewGame.Errors = []string{"Soubor s otázkami není v pořádku"}
+		app.home(w, r, form, http.StatusBadRequest)
 		return
 	}
 }

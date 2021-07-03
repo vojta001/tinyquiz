@@ -101,7 +101,7 @@ func main() {
 	}()
 
 	mux := httprouter.New()
-	mux.GET("/", app.home)
+	mux.GET("/", app.homeSuccess)
 	mux.POST("/play/:code", app.play)
 	mux.POST("/session", app.createSession)
 	mux.GET("/game/:playerUid", app.game)

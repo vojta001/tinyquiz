@@ -22,28 +22,49 @@
 	</section>
 	<section>
 		<h1>Připojit se ke hře</h1>
-		<form id="join" method="post">
-			<label>Kód hry: <input type="text" name="code" placeholder="Kód hry"></label>
-			<label>Jméno hráče: <input type="text" name="player" placeholder="Jméno"></label>
-			<input type="submit" value="Připojit do hry">
-		</form>
+		{{- with .Form.Join }}
+			{{- with .Errors }}
+				<ul class="error">
+					{{ range . }}<li>{{ . }}</li>{{ end }}
+				</ul>
+			{{- end }}
+			<form id="join" method="post">
+				<label>Kód hry: <input type="text" name="code" placeholder="Kód hry" required value="{{ .Code }}"></label>
+				<label>Jméno hráče: <input type="text" name="player" placeholder="Jméno" required value="{{ .Name }}"></label>
+				<input type="submit" value="Připojit do hry">
+			</form>
+		{{- end }}
 	</section>
 	<section>
 		<h1>Zorganizovat novou hru</h1>
-		<form id="play" method="post" action="/session">
-			<label>Kód kvízu: <input type="text" name="code" placeholder="Kód kvizu"></label>
-			<label>Jméno organizátora: <input type="text" name="organiser" placeholder="Jméno"></label>
-			<input type="submit" value="Začit hrát">
-		</form>
+        {{- with .Form.NewSession }}
+			{{- with .Errors }}
+				<ul class="error">
+					{{ range . }}<li>{{ . }}</li>{{ end }}
+				</ul>
+			{{- end }}
+			<form id="play" method="post" action="/session">
+				<label>Kód kvízu: <input type="text" name="code" placeholder="Kód kvizu" required value="{{ .Code }}"></label>
+				<label>Jméno organizátora: <input type="text" name="organiser" placeholder="Jméno" required value="{{ .Name }}"></label>
+				<input type="submit" value="Začit hrát">
+			</form>
+		{{- end }}
 	</section>
 	<section>
-		<h1>Vytvořit nový kvíz</h1>
-		<p>Stáhnout <a href="/template" download>šablonu nového kvízu</a></p>
-		<form id="new" enctype="multipart/form-data" method="post" action="/game">
-			<label>Jméno kvízu: <input type="text" name="name" placeholder="Jméno kvízu"></label>
-			<label>Jméno autora: <input type="text" name="author" placeholder="Jméno"></label>
-			<label>Kvíz: <input type="file" name="game" accept="text/csv"></label>
-			<input type="submit" value="Vytvořit">
-		</form>
+        {{- with .Form.NewGame }}
+			{{- with .Errors }}
+				<ul class="error">
+					{{ range . }}<li>{{ . }}</li>{{ end }}
+				</ul>
+			{{- end }}
+			<h1>Vytvořit nový kvíz</h1>
+			<p>Stáhnout <a href="/template" download>šablonu nového kvízu</a></p>
+			<form id="new" enctype="multipart/form-data" method="post" action="/game">
+				<label>Jméno kvízu: <input type="text" name="name" placeholder="Jméno kvízu" required value="{{ .Title }}"></label>
+				<label>Jméno autora: <input type="text" name="author" placeholder="Jméno" required value="{{ .Name }}"></label>
+				<label>Kvíz: <input type="file" name="game" accept="text/csv" required></label>
+				<input type="submit" value="Vytvořit">
+			</form>
+		{{- end }}
 	</section>
 {{ end -}}
