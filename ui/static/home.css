@@ -10,6 +10,7 @@ section {
 	border: 2px solid black;
 	margin: 2rem;
 	padding: 1rem;
+	position: relative;
 }
 
 #join, #play, #new {
@@ -20,4 +21,41 @@ section {
 .error {
 	color: red;
 	font-weight: bold;
+}
+
+.help::after {
+	content: "?";
+	font-weight: bold;
+	line-height: 1.5rem;
+}
+
+.help {
+	border: 2px solid;
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	position: absolute;
+	right: 0;
+	top: 0;
+	padding: 0;
+	background: none;
+	cursor: pointer;
+}
+
+.message {
+	position: absolute;
+	right: 1.5rem;
+	top: 0;
+	display: none;
+	z-index: 1;
+}
+
+.message.show {
+	display: block;
+	background-color: white;
+	border: 2px dotted black;
+	width: 50vw;
+	max-width: 20rem;
 }

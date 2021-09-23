@@ -34,6 +34,18 @@
 				<input type="submit" value="Připojit do hry">
 			</form>
 		{{- end }}
+		<button class="help" aria-label="Zobrazit nápovědu"></button>
+		<div class="message">
+			<p>
+				Takto se připojíte k již založené (i probíhající) hře.
+			</p>
+			<p>
+				<strong>Kód hry</strong> získáte od jejího organizátora (vidíte-li na sdílený monitor, je napsán v závorkách za názvem kvízu).
+			</p>
+			<p>
+				<strong>Jméno hráče</strong> se zobrazuje ostatním hráčům při hře i následně na výsledkovce. Doporučuje se volit jej s ohledem na dobré mravy a případné nároky na svou anonymitu, ochranu osobních údajů apod.
+			</p>
+		</div>
 	</section>
 	<section>
 		<h1>Zorganizovat novou hru</h1>
@@ -49,6 +61,18 @@
 				<input type="submit" value="Začit hrát">
 			</form>
 		{{- end }}
+		<button class="help" aria-label="Zobrazit nápovědu"></button>
+		<div class="message">
+			<p>
+				Takto se stanete organizátorem hry. Sami nemůžete odpovídat, ale získáte kód pro připojení ostatních hráčů.
+			</p>
+			<p>
+				<strong>Kód kvízu</strong> získáte od jeho autora, který jej získal při vytvoření.
+			</p>
+			<p>
+				<strong>Jméno organizátora</strong> se zobrazuje ostatním hráčům při hře. Doporučuje se volit jej s ohledem na případné nároky na svou anonymitu, ochranu osobních údajů apod.
+			</p>
+		</div>
 	</section>
 	<section>
         {{- with .Form.NewGame }}
@@ -59,7 +83,7 @@
 			{{- end }}
 			<h1>Vytvořit nový kvíz</h1>
 			<p><a href="/template" download>Šablona nového kvízu</a>.</p>
-			<p><a href="/help">Nápověda</a></p>
+			<p><a href="/help">Popis formátu</a></p>
 			<form id="new" enctype="multipart/form-data" method="post" action="/game">
 				<label>Jméno kvízu: <input type="text" name="name" placeholder="Jméno kvízu" required value="{{ .Title }}"></label>
 				<label>Jméno autora: <input type="text" name="author" placeholder="Jméno" required value="{{ .Name }}"></label>
@@ -67,5 +91,20 @@
 				<input type="submit" value="Vytvořit">
 			</form>
 		{{- end }}
+		<button class="help" aria-label="Zobrazit nápovědu"></button>
+		<div class="message">
+			<p>
+				Takto vytvoříte nový kvíz (sadu otázek a odpovědí), který následně můžete použít při zakládání hry.
+			</p>
+			<p>
+				<strong>Jméno kvízu</strong> se zobrazí organizátorům i hráčům při hře.
+			</p>
+			<p>
+				<strong>Jméno autora</strong> je doplňkový údaj na podrobnostech kvízu; při následné hře vidět není. Přesto se doporučuje volit jej s ohledem na případné nároky na svou anonymitu, ochranu osobních údajů apod.
+			</p>
+			<p>
+				<strong>Kvíz</strong> je CSV soubor formátu popsaného na samostatné stránce. Nejpohodlnější je vyjít z dodané šablony.
+			</p>
+		</div>
 	</section>
 {{ end -}}
