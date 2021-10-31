@@ -5,9 +5,11 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 	"vkane.cz/tinyquiz/pkg/model"
 	"vkane.cz/tinyquiz/pkg/model/ent"
@@ -35,8 +37,14 @@ func setDefaultTemplateData(td *templateData) {
 
 func main() {
 	var addr string
+	var socket bool
 	if env, ok := os.LookupEnv("TINYQUIZ_LISTEN"); ok {
 		addr = env
+		const unixPrefix = "unix:"
+		if strings.HasPrefix(addr, unixPrefix) {
+			socket = true
+			addr = strings.TrimPrefix(addr, unixPrefix)
+		}
 	} else {
 		addr = "[::1]:8080"
 	}
@@ -127,6 +135,13 @@ func main() {
 		Handler:  mux,
 	}
 	log.Printf("Starting server on %s\n", addr)
-	err := srv.ListenAndServe()
-	log.Fatal(err)
+	if socket {
+		if listener, err := net.Listen("unix", addr); err == nil {
+			log.Fatal(srv.Serve(listener))
+		} else {
+			errorLog.Fatal(err)
+		}
+	} else {
+		errorLog.Fatal(srv.ListenAndServe())
+	}
 }
