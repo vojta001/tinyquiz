@@ -59,12 +59,6 @@
             };
           };
           config = lib.mkIf cfg.enable {
-            users.groups.tinyquiz = {};
-            users.users.tinyquiz = {
-              description = "Tinyquiz service user";
-              group = "tinyquiz";
-              isSystemUser = true;
-            };
             systemd.services.tinyquiz = {
               description = "Tinyquiz service";
               wantedBy = [ "multi-user.target" ];
@@ -73,6 +67,7 @@
               serviceConfig = {
                 ExecStart = "${self.packages.x86_64-linux.tinyquiz-web}/bin/web";
                 User = "tinyquiz";
+                DynamicUser = true;
               };
               environment = cfg.config;
             };
